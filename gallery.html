@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>helen draws</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&display=swap');
-
         * {
             box-sizing: border-box;
             margin: 0;
@@ -16,12 +14,11 @@
         body {
             background-color: #000000;
             color: #ffffff;
-            font-family: 'IM Fell English', serif;
+            font-family: Arial, sans-serif;
             min-height: 100vh;
             padding: 60px 40px 40px;
         }
 
-        /* ── header ── */
         .header {
             text-align: center;
             margin-bottom: 60px;
@@ -29,30 +26,27 @@
 
         .header h1 {
             font-size: 2.2em;
-            font-weight: 400;
+            font-weight: normal;
             letter-spacing: 0.04em;
             margin-bottom: 10px;
         }
 
         .header p {
             font-size: 1em;
-            font-style: italic;
             opacity: 0.5;
         }
 
-        /* ── back link ── */
         .back-btn {
             position: fixed;
             top: 24px;
             left: 28px;
             color: #ffffff;
             text-decoration: none;
-            font-size: 0.82em;
-            letter-spacing: 0.08em;
-            border: 1px solid rgba(255,255,255,0.4);
-            padding: 7px 16px;
+            font-size: 0.85em;
+            letter-spacing: 0.05em;
+            border: 1px solid #ffffff;
+            padding: 8px 16px;
             border-radius: 20px;
-            font-family: Arial, sans-serif;
             transition: background-color 0.2s, color 0.2s;
         }
 
@@ -61,17 +55,16 @@
             color: #000000;
         }
 
-        /* ── masonry grid ── */
         .gallery {
-            columns: 3 280px;
-            column-gap: 16px;
+            columns: 3 260px;
+            column-gap: 14px;
             max-width: 1100px;
             margin: 0 auto;
         }
 
         .gallery-item {
             break-inside: avoid;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             position: relative;
             overflow: hidden;
             cursor: pointer;
@@ -80,12 +73,10 @@
         .gallery-item img {
             width: 100%;
             display: block;
-            filter: grayscale(20%);
-            transition: filter 0.4s ease, transform 0.4s ease;
+            transition: transform 0.4s ease;
         }
 
         .gallery-item:hover img {
-            filter: grayscale(0%);
             transform: scale(1.02);
         }
 
@@ -97,8 +88,7 @@
             background: linear-gradient(transparent, rgba(0,0,0,0.85));
             color: #ffffff;
             padding: 24px 14px 10px;
-            font-style: italic;
-            font-size: 0.85em;
+            font-size: 0.82em;
             opacity: 0;
             transition: opacity 0.3s ease;
             pointer-events: none;
@@ -108,12 +98,11 @@
             opacity: 1;
         }
 
-        /* ── lightbox ── */
         .lightbox {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.92);
+            background: rgba(0,0,0,0.93);
             z-index: 1000;
             justify-content: center;
             align-items: center;
@@ -128,27 +117,25 @@
             max-width: 90vw;
             max-height: 88vh;
             object-fit: contain;
-            border: 1px solid rgba(255,255,255,0.08);
         }
 
         .lightbox-close {
             position: fixed;
-            top: 24px;
-            right: 28px;
+            top: 20px;
+            right: 24px;
             color: #fff;
-            font-size: 1.6em;
+            font-size: 1.8em;
             cursor: pointer;
-            line-height: 1;
             background: none;
             border: none;
             font-family: Arial, sans-serif;
             opacity: 0.7;
             transition: opacity 0.2s;
+            line-height: 1;
         }
 
         .lightbox-close:hover { opacity: 1; }
 
-        /* ── dots navigation ── */
         .dots-container {
             display: flex;
             gap: 20px;
@@ -176,15 +163,6 @@
         .dot.active {
             background-color: #4da6ff;
         }
-
-        /* ── empty state ── */
-        .empty {
-            text-align: center;
-            opacity: 0.35;
-            font-style: italic;
-            font-size: 1.1em;
-            padding: 80px 0;
-        }
     </style>
 </head>
 <body>
@@ -196,34 +174,45 @@
         <p>a collection of things made by hand</p>
     </div>
 
-    <!-- =============================================
-         ADD YOUR IMAGES HERE.
-         Replace the src="..." with your actual image
-         paths or URLs. Add or remove .gallery-item
-         blocks as needed. Caption is optional.
-    ============================================= -->
     <div class="gallery">
 
         <div class="gallery-item" onclick="openLightbox(this)">
-            <img src="images/drawing1.jpg" alt="drawing 1" loading="lazy">
-            <div class="caption">caption if you want one</div>
-        </div>
-
-        <div class="gallery-item" onclick="openLightbox(this)">
-            <img src="images/drawing2.jpg" alt="drawing 2" loading="lazy">
+            <img src="images/9A22E8E1-F09D-4DEC-A9D1-AFF5B157DE6E_1_105_c.jpeg" alt="drawing" loading="lazy">
             <div class="caption"></div>
         </div>
 
         <div class="gallery-item" onclick="openLightbox(this)">
-            <img src="images/drawing3.jpg" alt="drawing 3" loading="lazy">
+            <img src="images/A153C337-A384-4273-8995-47A3AE5AE8CC_1_105_c.jpeg" alt="drawing" loading="lazy">
             <div class="caption"></div>
         </div>
 
-        <!-- add more items here -->
+        <div class="gallery-item" onclick="openLightbox(this)">
+            <img src="images/C4A4C82F-6EB5-4D6A-907D-90F1C46BBF01_4_5005_c.jpeg" alt="drawing" loading="lazy">
+            <div class="caption"></div>
+        </div>
+
+        <div class="gallery-item" onclick="openLightbox(this)">
+            <img src="images/C4E77C6D-5B55-4124-97C5-A6D0CD8ED908_1_105_c.jpeg" alt="drawing" loading="lazy">
+            <div class="caption"></div>
+        </div>
+
+        <div class="gallery-item" onclick="openLightbox(this)">
+            <img src="images/DA6397DA-5A36-4CBE-8D81-F5CB3CC7D515_1_105_c.jpeg" alt="drawing" loading="lazy">
+            <div class="caption"></div>
+        </div>
+
+        <div class="gallery-item" onclick="openLightbox(this)">
+            <img src="images/DC606E66-C151-43C8-8662-AB42F4A51BA0.png" alt="drawing" loading="lazy">
+            <div class="caption"></div>
+        </div>
+
+        <div class="gallery-item" onclick="openLightbox(this)">
+            <img src="images/FE35CE9F-40D0-4D41-A4AE-0809D51F3963_1_105_c.jpeg" alt="drawing" loading="lazy">
+            <div class="caption"></div>
+        </div>
 
     </div>
 
-    <!-- lightbox -->
     <div class="lightbox" id="lightbox" onclick="closeLightbox()">
         <button class="lightbox-close" onclick="closeLightbox()">×</button>
         <img id="lightbox-img" src="" alt="">
