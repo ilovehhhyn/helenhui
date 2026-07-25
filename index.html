@@ -5,23 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>helen's portoflio</title>
     <style>
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             background-color: #000000;
             color: #ffffff;
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            padding: 0;
         }
-        
-        .github-btn {
+
+        /* ---- top nav (fixed) ---- */
+        .top-nav {
             position: fixed;
             top: 20px;
             right: 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            z-index: 100;
+        }
+
+        .nav-btn {
             color: #ffffff;
             text-decoration: none;
             font-size: 0.85em;
@@ -30,41 +38,115 @@
             padding: 8px 16px;
             border-radius: 20px;
             transition: background-color 0.2s, color 0.2s;
+            white-space: nowrap;
         }
 
-        .github-btn:hover {
+        .nav-btn:hover {
             background-color: #ffffff;
             color: #000000;
         }
-        
-        .container {
-            max-width: 800px;
-            text-align: center;
-            flex-grow: 1;
+
+        /* ---- sections ---- */
+        section {
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
         }
-        
+
+        .container {
+            max-width: 800px;
+            text-align: center;
+        }
+
         h1 {
             font-size: 2.5em;
             margin-bottom: 20px;
         }
-        
+
         p {
             font-size: 1.2em;
             line-height: 1.6;
         }
-        
+
+        /* ---- scroll-down indicator ---- */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: #ffffff;
+            letter-spacing: 0.08em;
+            font-size: 0.95em;
+            opacity: 0.85;
+            animation: bob 1.8s ease-in-out infinite;
+        }
+
+        .scroll-indicator .triangle {
+            font-size: 1.1em;
+            margin-top: 6px;
+        }
+
+        @keyframes bob {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50%      { transform: translateX(-50%) translateY(8px); }
+        }
+
+        /* ---- research section ---- */
+        .research {
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .research-inner {
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            text-align: left;
+        }
+
+        .research h2 {
+            font-size: 1.8em;
+            margin-bottom: 30px;
+        }
+
+        .research ul {
+            font-size: 1.2em;
+            line-height: 1.6;
+            padding-left: 1.2em;
+        }
+
+        .research li {
+            margin-bottom: 16px;
+        }
+
+        .research a {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+
+        .research a:hover {
+            color: #cccccc;
+        }
+
+        /* ---- floating dots (fixed) ---- */
         .dots-container {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
             display: flex;
             gap: 20px;
             justify-content: center;
             align-items: center;
-            padding: 30px 0;
-            margin-top: auto;
+            z-index: 100;
         }
-        
+
         .dot {
             width: 15px;
             height: 15px;
@@ -75,7 +157,7 @@
             text-decoration: none;
             display: block;
         }
-        
+
         .dot:hover {
             transform: scale(1.3);
             background-color: #cccccc;
@@ -83,25 +165,38 @@
     </style>
 </head>
 <body>
-    <a href="https://github.com/ilovehhhyn" target="_blank" class="github-btn">github</a>
-    <a href="https://github.com/ilovehhhyn/pgi-spring-26" target="_blank" class="github-btn" style="right: 110px;">project @ paragon global investments</a>
-    <a href="https://github.com/ilovehhhyn/Memories-eval/tree/main" target="_blank" class="github-btn" style="right: 420px;">research @ memories.ai</a>
-    <a href="https://guulp.vercel.app" target="_blank" class="github-btn" style="right: 640px;">project: water ranker</a>
-    <a href="https://ilovehhhyn.github.io/theresNoEnglishWordForXingFu/" target="_blank" class="github-btn" style="right: 820px;">project: poetry inspo</a>
-    <a href="https://github.com/ilovehhhyn/flush" target="_blank" class="github-btn" style="right: 1000px;">project: claude code toilet</a>
-    <a href="gallery.html" class="github-btn" style="right: 1240px;">i draw</a>
+    <nav class="top-nav">
+        <a href="gallery.html" class="nav-btn">i draw</a>
+        <a href="https://github.com/ilovehhhyn/choobi" target="_blank" class="nav-btn">docs master (choobi)</a>
+        <a href="https://github.com/ilovehhhyn/dooni" target="_blank" class="nav-btn">brain tickle (dooni)</a>
+        <a href="https://github.com/ilovehhhyn/flush" target="_blank" class="nav-btn">claude code toilet</a>
+        <a href="https://ilovehhhyn.github.io/theresNoEnglishWordForXingFu/" target="_blank" class="nav-btn">floating dict</a>
+        <a href="https://guulp.vercel.app" target="_blank" class="nav-btn">drink h2o</a>
+        <a href="https://github.com/ilovehhhyn" target="_blank" class="nav-btn">github</a>
+    </nav>
 
-    
-    
+    <section class="hero">
+        <div class="container">
+            <h1>welcome to helen's world</h1>
+            <p>helen writes, helen draws, helen builds, helen sits under a tomato tree</p>
+        </div>
 
+        <a href="#research" class="scroll-indicator" style="text-decoration: none;">
+            <div>scroll down for research, click dots for writing</div>
+            <div class="triangle">&#9660;</div>
+        </a>
+    </section>
 
-    <div class="container">
-        <h1>welcome to helen's world</h1>
-        <p>helen writes, helen draws, helen builds, helen sits under a tomato tree</p>
+    <section class="research" id="research">
+        <div class="research-inner">
+            <h2>research projects and ideas</h2>
+            <ul>
+                <li><a href="https://github.com/ilovehhhyn/Memories-eval/tree/main" target="_blank">unified capability-based benchmark for AI memory systems</a></li>
+                <li><a href="https://github.com/ilovehhhyn/pgi-spring-26" target="_blank">reinforcement-learning and kalman filter inspired exploration on portfolio optimization</a></li>
+            </ul>
+        </div>
+    </section>
 
-        
-    </div>
-    
     <div class="dots-container">
         <a href="page1.html" class="dot"></a>
         <a href="page2.html" class="dot"></a>
