@@ -23,6 +23,27 @@ body {
     padding: 40px 20px;
 }
 
+/* padding gives it a usable tap target on mobile; the negative margin
+   cancels that out so it still sits flush in the corner */
+.home-arrow {
+    position: fixed;
+    top: 20px;
+    left: 22px;
+    z-index: 101;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1.25em;
+    line-height: 1;
+    opacity: 0.7;
+    padding: 8px 12px;
+    margin: -8px -12px;
+    transition: opacity 0.2s;
+}
+
+.home-arrow:hover {
+    opacity: 1;
+}
+
 .writing-title {
     font-size: 1.5em;
     line-height: 1.3;
