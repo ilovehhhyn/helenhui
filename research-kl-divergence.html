@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Intuition Behind KL Divergence in Post-Training</title>
+    <title>blog: the intuition behind KL divergence in post-training</title>
     <link rel="stylesheet" href="research-blog.css">
     <script>
         window.MathJax = {
@@ -23,7 +23,7 @@
     <a href="index.html#research" class="home-arrow" aria-label="back to research ideas">&#8592;</a>
     <main class="article-shell">
         <article class="research-article">
-            <h1 id="the-intuition-behind-kl-divergence-in-post-training"><strong>The Intuition Behind KL Divergence in Post-Training</strong></h1>
+            <h1 id="blog-the-intuition-behind-kl-divergence-in-post-training"><strong>blog: the intuition behind KL divergence in post-training</strong></h1>
             <p>For the longest time I understood KL as a pretty term in all RL papers and a &quot;how different two probability distributions are&quot; measurement with the mental image of my friend pinching their fingers at the vertical gap between two deformed curves scribbled on a whiteboard in Fine Hall, our math building. This year after reading some more papers on RL specifically on learning capabilities and temporal credit assignment, I found that picture to be inadequate.</p>
             <p>i want to spend some time writing out how to gain intuition beyond this pinching 🤏, which could help readers understand its relation to phenomena in post training like forgetting, how things are learned and probability mass on weights moved, and its relation to the type of samples.</p>
             <p>as we see neolabs and research show more and more interest in agents and llm systems that can self-update, self-improve, and self-learn, we must pay attention to the fundamental trade-off between placistiy and stability, between learning and forgetting. sitting at the the fundamental layer, among many other things, is KL (as a cousine of cross entropy), and understanding it will provide a good baseline for choosing the minimizers or guarding principals to control the learning and forgetting of these models.</p>
