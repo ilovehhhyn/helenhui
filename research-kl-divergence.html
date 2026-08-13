@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Intuition Behind KL Divergence in Post-Training</title>
+    <link rel="stylesheet" href="research-blog.css">
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']],
+                processEscapes: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+            }
+        };
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <a href="index.html#research" class="home-arrow" aria-label="back to research ideas">&#8592;</a>
+    <main class="article-shell">
+        <article class="research-article">
+            <h1 id="the-intuition-behind-kl-divergence-in-post-training"><strong>The Intuition Behind KL Divergence in Post-Training</strong></h1>
+            <p>For the longest time I understood KL as a pretty term in all RL papers and a &quot;how different two probability distributions are&quot; measurement with the mental image of my friend pinching their fingers at the vertical gap between two deformed curves scribbled on a whiteboard in Fine Hall, our math building. This year after reading some more papers on RL specifically on learning capabilities and temporal credit assignment, I found that picture to be inadequate.</p>
+            <p>i want to spend some time writing out how to gain intuition beyond this pinching 🤏, which could help readers understand its relation to phenomena in post training like forgetting, how things are learned and probability mass on weights moved, and its relation to the type of samples.</p>
+            <p>as we see neolabs and research show more and more interest in agents and llm systems that can self-update, self-improve, and self-learn, we must pay attention to the fundamental trade-off between placistiy and stability, between learning and forgetting. sitting at the the fundamental layer, among many other things, is KL (as a cousine of cross entropy), and understanding it will provide a good baseline for choosing the minimizers or guarding principals to control the learning and forgetting of these models.</p>
+            <p>Notation:</p>
+            <ul>
+            <li><span class="math-inline">$\pi_\theta$</span> is the policy being trained, <span class="math-inline">$\pi_{\theta_0}$</span> is the initial policy before post-training, <span class="math-inline">$\pi^*$</span> is the target policy</li>
+            <li><span class="math-inline">$r(y)$</span> is a reward</li>
+            <li><span class="math-inline">$\beta$</span> is the KL-regularization coefficient</li>
+            <li><span class="math-inline">$\nabla_\theta \log \pi_\theta(y)$</span> is the <strong>score function</strong> = the direction in parameter space that most increases the log-probability of the specific outcome <span class="math-inline">$y$</span>.</li>
+            </ul>
+            <h2 id="entropy-cross-entropy-and-kl"><strong>entropy, cross entropy, and KL</strong></h2>
+            <p>for those unfamiliar, here's some intuition on entropy, cross entropy, and KL that I found useful: <a href="#appendix-background">read the appendix background</a>.</p>
+            <h2 id="what-kl-measures-and-punishes-as-loss"><strong>What KL measures and punishes as loss</strong></h2>
+            <p>Formally,</p>
+            <div class="math-display">$$\mathrm{KL}[p\Vert q ] = \sum_y p(y) \log \frac{p(y)}{q(y)}.$$</div>
+            <p>here's a great youtube video <a href="https://youtu.be/SxGYPqCgJWM?si=0Fj0CafUAq3ZeJ7a" target="_blank" rel="noopener noreferrer">https://youtu.be/SxGYPqCgJWM?si=0Fj0CafUAq3ZeJ7a</a> that explains KL intuitively your surprise if reality was p and you believed in q. in more formal language, this is the expected number of extra nats you pay to encode samples drawn from <span class="math-inline">$p$</span> using a codebook optimized for <span class="math-inline">$q$</span>.</p>
+            <p>key points to internalize:</p>
+            <ul>
+            <li><strong>The first slot is &quot;reality&quot; and generates the samples.</strong> the second slot is the one being judged against reality p.</li>
+            <li>Look at the term <span class="math-inline">$\log(p(y)/q(y))$</span> at a single outcome <span class="math-inline">$y$</span>. If <span class="math-inline">$p(y)$</span> is large and <span class="math-inline">$q(y) \to 0$</span>, the term approaches infinity: an unbounded penalty for calling something impossible when it actually happens. on the other hand, if instead <span class="math-inline">$p(y) \approx 0$</span>, the term is multiplied by <span class="math-inline">$p(y) \approx 0$</span> in the expectation, so whatever <span class="math-inline">$q$</span> does there is nearly free -- if something is rare in reality, however we predict it in the model gets no penalties under this model.</li>
+            </ul>
+            <blockquote><span class="math-inline">$\mathrm{KL}[p \Vert q]$</span> only punishes <span class="math-inline">$q$</span> for missing regions where <span class="math-inline">$p$</span> has mass. It never punishes <span class="math-inline">$q$</span> for placing mass where <span class="math-inline">$p$</span> has none.</blockquote>
+            <h2 id="sft-is-forward-kl-rl-is-reverse-kl-different-punishments"><strong>SFT is forward KL, RL is reverse KL: different punishments</strong></h2>
+            <p>a large part of this section and the next two will draw on a paper by he Princeton Language and Intelligence(<a href="https://arxiv.org/abs/2510.18874" target="_blank" rel="noopener noreferrer">Chen et al. 2025</a>). they found that, when post training across Llama and Qwen models, on instruction following, general knowledge, and arithmetic reasoning, they find a consistent pattern: SFT forgets while learning a new task, RL doesn’t forget while learning decently well. The paper introduced the notion of SFT minimizing the <em>forward</em> KL divergence, while RL minimizes the <em>reverse</em> KL. when i read it i said i didn’t know the direction in which you pinched mattered, especially in post training. so let’s dig in!</p>
+            <p><strong>SFT.</strong> The loss is negative log-likelihood of samples <span class="math-inline">$y$</span> drawn from the target distribution <span class="math-inline">$\pi^*$</span>, with <span class="math-inline">$\pi_\theta$</span> being the distribution based on the weights we are training:</p>
+            <div class="math-display">$$\mathcal{L}_{\mathrm{SFT}}(\theta) = -\mathbb{E}_{y \sim \pi^*}\big[\log \pi_\theta(y)\big] = H(\pi^*, \pi_\theta).$$</div>
+            <p>i'm not going to delve into the math here, but basically what we see here is that this loss is equivalent to cross-entropy.</p>
+            <p>cross-entropy is entropy plus KL (<a href="#appendix-background">shown in the appendix background</a>). the entropy of <span class="math-inline">$\pi^*$</span> is a constant in <span class="math-inline">$\theta$</span>, so minimizing the SFT loss is exactly minimizing <span class="math-inline">$\mathrm{KL}[\pi^* \Vert \pi_{\theta}]$</span>, which we call forward KL: the tunable model sits in q, the judged slot.</p>
+            <p>this says that SFT tunes the model in a way such that anywhere the data has mass, the model <em>must</em> place mass or get a huge penalty. If there is some information in the target, real-life data, like “the sky is purple”, the model must learn it or get punished.</p>
+            <p><strong>RL.</strong> in RL the notion of reverse-KL loss arises from our analysis of the standard KL-regularized objective that we are attempting to maximize:</p>
+            <div class="math-display">$$J_{\mathrm{RL}}(\theta) = \mathbb{E}_{y \sim \pi_\theta}[r(y)] - \beta \, \mathrm{KL}[\pi_\theta \Vert \pi_{\theta_0}].$$</div>
+            <p><a href="https://arxiv.org/abs/2206.00761" target="_blank" rel="noopener noreferrer">Korbak et al. (2022)</a> showed that the policy maximizing this objective has a closed form:</p>
+            <div class="math-display">$$\pi^*(y) = \frac{1}{Z}\,\pi_{\theta_0}(y)e^{r(y)/\beta}, \qquad Z = \sum_y \pi_{\theta_0}(y)e^{r(y)/\beta}.$$</div>
+            <p>intuitively, this means: take the initial policy, multiply up the outputs that earn reward, renormalize. we see that the RL target <span class="math-inline">$\pi^*$</span> literally contains the initial policy <span class="math-inline">$\pi_{\theta_0}$</span> as a factor; RL is not chasing some external ideal but rather a reweighted version of what the model already was. intuitively, think about when the model gets a binary reward = 0 on tasks using old knowledge, then <span class="math-inline">$e^0 = 1$</span>, and those portions of <span class="math-inline">$\pi_{\theta_0}$</span> pass into <span class="math-inline">$\pi^*$</span> unchanged apart from renormalization. so the model explicitly retains &quot;memory&quot;.</p>
+            <p>now, with some manipulation purely arithmetically we get</p>
+            <div class="math-display">$$\log \pi^*(y) = \log \pi_{\theta_0}(y) + \frac{r(y)}{\beta} - \log Z.$$</div>
+            <p>now write out the reverse KL from the current policy to the destination and substitute:</p>
+            <div class="math-display">$$\mathrm{KL}[\pi_\theta \Vert \pi^*] = \sum_y \pi_\theta(y)\log \frac{\pi_\theta(y)}{\pi^*(y)} = \sum_y \pi_\theta(y)\Big[\log \pi_\theta(y) - \log \pi_{\theta_0}(y) - \frac{r(y)}{\beta} + \log Z\Big].$$</div>
+            <p>The sum splits into three pieces:</p>
+            <ol>
+            <li><span class="math-inline">$\sum_y \pi_\theta (\log \pi_\theta-\log \pi_{\theta_0})$</span> = <span class="math-inline">$\mathrm{KL}[\pi_\theta \Vert \pi_{\theta_0}]$</span> = the regularizer.</li>
+            <li><span class="math-inline">$-\frac{1}{\beta}\ \mathbb{E}_{y \sim \pi_\theta}[r(y)]$</span> = the expected reward just scaled.</li>
+            <li><span class="math-inline">$\log Z \cdot \sum_y \pi_\theta(y) = \log Z$</span> = constant</li>
+            </ol>
+            <p>Thus, all together,</p>
+            <div class="math-display">$$\mathrm{KL}[\pi_\theta \Vert \pi^*] = \mathrm{KL}[\pi_\theta \Vert \pi_{\theta_0}] - \frac{1}{\beta}\,\mathbb{E}_{y \sim \pi_\theta}[r(y)] + \log Z.$$</div>
+            <div class="math-display">$$-\beta\,\mathrm{KL}[\pi_\theta \Vert \pi^*] = \mathbb{E}_{y \sim \pi_\theta}[r(y)] - \beta\,\mathrm{KL}[\pi_\theta \Vert \pi_{\theta_0}] - \beta \log Z = J_{\mathrm{RL}}(\theta) - \beta \log Z.$$</div>
+            <p>Since <span class="math-inline">$\log Z$</span> is a constant in <span class="math-inline">$\theta$</span>, the two sides are equal up to an additive constant:</p>
+            <div class="math-display">$$-\beta\,\mathrm{KL}[\pi_\theta \Vert \pi^*] = J_{\mathrm{RL}}(\theta) + \text{const},$$</div>
+            <p>maximizing the RL objective <em>is</em> minimizing the reverse KL to <span class="math-inline">$\pi^*$</span>. (<a href="https://arxiv.org/abs/2206.00761" target="_blank" rel="noopener noreferrer">Korbak et al. 2022</a>; <a href="https://arxiv.org/abs/2510.18874" target="_blank" rel="noopener noreferrer">Chen et al. 2025</a>, §3.1).</p>
+            <p>what does this mean? the model is only penalized where it places probability mass and <span class="math-inline">$\pi^*$</span> does not (equivalently, where the base model does not: since <span class="math-inline">$\pi^* \propto \pi_{\theta_0}e^{r/\beta}$</span>, the two share the same support for bounded rewards); it gets penalized for learning things drastically out of distribution , i.e. drifting into new territory and learning very wild things. it doesn't get penalized for ignoring parts of the target model - for not learning. so it can be lazy!</p>
+            <h2 id="the-data-p-is-what-determines-the-kl-direction"><strong>The data (p) is what determines the KL direction</strong></h2>
+            <p>The previous section showed that SFT minimizes forward KL and RL minimizes reverse KL. This section explains how and why it is determined by which distribution produces the training samples.</p>
+            <p>p is the sampler. what is a sampler? the sampler is whoever hands you the examples you train on this step.</p>
+            <p>Your loss is an average over some distribution: <span class="math-inline">$\mathbb{E}_{y \sim D}[\text{stuff}(y)]$</span>. That average is over <em>every possible output</em> <span class="math-inline">$y$</span>. For a language model that is every possible token sequence, so you can never actually compute it. The only thing you can do is grab a few concrete <span class="math-inline">$y$</span>'s, compute <span class="math-inline">$\text{stuff}(y)$</span> on those, and average. The distribution <span class="math-inline">$D$</span> you grab from is the sampler. It is the answer to the question &quot;where did this batch physically come from?&quot;</p>
+            <p>There are two samplers in post-training:</p>
+            <ul>
+            <li><strong>SFT = the sampler is the dataset</strong></li>
+            <li class="nested">Someone (humans, a bigger model) wrote demonstrations, they are sitting in a file, and each batch you read some. They are drawn from <span class="math-inline">$\pi^*$</span> regardless of what the model currently believes.</li>
+            <li><strong>RL = the sampler is the model itself</strong></li>
+            <li class="nested">for each batch, you run the current <span class="math-inline">$\pi_\theta$</span>, it generates outputs, and <em>those generations</em> are the training examples, which reflect what the model currently believes. Why this matters mechanically: the gradient is computed <em>at</em> the samples, meaning <span class="math-inline">$\nabla_\theta \log \pi_\theta(y)$</span> needs a specific <span class="math-inline">$y$</span> to be evaluated at, and it only gets evaluated at the <span class="math-inline">$y$</span>'s in your batch. So the sampler decides where in output space the model receives any training signal at all. If no sample lands in a region, there is no loss about that region this step.</li>
+            </ul>
+            <p>an example to gain intuition: say the model weights include some weights that can do poetry and you are fine-tuning on math.</p>
+            <ul>
+            <li><strong>SFT batch</strong> = math problems from a dataset. Every gradient is evaluated at a math solution and poetry never appears in a batch, so no gradient term ever mentions the poetry region. It is unmonitored (we will see what happens to this unmonitored region mechanistically, but spoiler: it gets forgotten).</li>
+            <li><strong>RL batch</strong> = whatever the model generates. If the model still writes poetry-adjacent outputs sometimes, those show up in batches, get scored, and get gradient terms attached. The poetry region stays under observation.</li>
+            </ul>
+            <p><a href="#appendix-sampling">Read the technical explanation of sampling and KL in the appendix.</a></p>
+            <p>To reiterate:</p>
+            <blockquote>SFT computes gradients at locations chosen by the data. RL computes gradients at locations chosen by the model.</blockquote>
+            <p>The next section shows what each pattern of coverage does to the model's probability mass.</p>
+            <h2 id="how-the-gradients-move-probability-mass-and-governs-learning-unlearning"><strong>How the gradients move probability mass and governs learning/unlearning</strong></h2>
+            <p>this part is again inspired by chen’s paper on the forgetting difference in a simple setting: the target is a mixture of two univariate Gaussians, an &quot;old&quot; mode standing in for prior knowledge and a &quot;new&quot; mode for the target task, and the training policy is a Gaussian whose parameters are trained by sampled gradients on each objective. they found that the forward KL first <em>stretches</em> the policy toward the new mode and then transfers mass out of the old mode, while reverse KL <em>slides</em> its new component over and leaves the old component intact. these verbs, stretch and slide, fall directly out of the score functions, and walking through why is the most instructive calculation in this post.</p>
+            <p>The gradient analysis here is my own unpacking of their setup.</p>
+            <p>For a Gaussian, the score functions with respect to the mean and the width are</p>
+            <div class="math-display">$$\frac{\partial \log \mathcal{N}}{\partial \mu} = \frac{y - \mu}{\sigma^2}\, \qquad
+             \frac{\partial \log \mathcal{N}}{\partial \sigma} = \frac{(y-\mu)^2 - \sigma^2}{\sigma^3}.$$</div>
+            <p>The <span class="math-inline">$\sigma$</span> derivative says, any sample landing <em>more than one standard deviation away</em> makes the numerator positive, i.e. pushes the distribution to widen.</p>
+            <p><strong>Why forward KL stretches.</strong></p>
+            <p>SFT evaluates the model's score at the data's locations, and the data oftentimes sit far from the model's mass. the <span class="math-inline">$\mu$</span>-gradient scales like <span class="math-inline">$d/\sigma^2$</span> where <span class="math-inline">$d=y-\mu$</span> while the <span class="math-inline">$\sigma$</span>-gradient scales like <span class="math-inline">$d^2/\sigma^3$</span>; their ratio is <span class="math-inline">$d/\sigma$</span> (this ratio argument depends on parameterizing in <span class="math-inline">$(\mu, \sigma)$</span> specifically; other parameterizations change the ratio, but the qualitative conclusion is what Chen et al.'s simulations show). thus, when the data is many standard deviations out, the steepest descent points primarily along &quot;get wider.&quot; and notice KL only ever perceives distance in units of the model's own <span class="math-inline">$\sigma$</span>. It has no ruler of its own. Inflating <span class="math-inline">$\sigma$</span> rescales the model's unit of distance and attacks the <span class="math-inline">$d^2/2\sigma^2$</span> penalty multiplicatively, which is why widening is so effective. The stretch is also fully legal, because laying density across the empty region between modes costs forward KL nothing - recall that adding mass to where the data has none is unpenalized.</p>
+            <p><strong>Where the forgetting actually comes from: normalization</strong></p>
+            <p>nothing in the SFT gradient ever says &quot;reduce probability on old capabilities.&quot; The erosion happens through a side channel: <strong>normalization</strong>. Probabilities sum to one, so probability is a fixed budget, and every step that deposits density at the data's location implicitly withdraws it from somewhere. because the forward KL objective specifies where to deposit but is silent about where the mass is moved <em>from</em>, the model can just secretly forget.</p>
+            <p>now an intuitive math explanation with softmax:</p>
+            <p>Three tokens with logits <span class="math-inline">$(2, 1, 0)$</span> have probabilities about <span class="math-inline">$(0.665, 0.245, 0.090)$</span>. Raise the third logit by one, touching nothing else: the probabilities become about <span class="math-inline">$(0.576, 0.212, 0.212)$</span>. The first two tokens each lost roughly thirteen percent of their mass <strong>with no gradient ever pointing at them</strong>. this is all because of normalization. In the Gaussian mixture the same mechanism runs through the mixture weight: every training sample is better explained by the new component, so weight drains from the old one. The old mode is just <em>defunded</em>. This also explains the learning-rate tradeoff Chen et al. observe for SFT (their Figure 3): a lower learning rate slows forgetting and learning together, because they are the same transaction.</p>
+            <p><strong>Why reverse KL slides.</strong></p>
+            <p>recall the setup: the training policy <span class="math-inline">$\pi_\theta$</span> is a two-component Gaussian mixture, with an <em>old component</em> initialized on the region of prior knowledge and a <em>new component</em> that must move to the target task. the target <span class="math-inline">$\pi^*$</span> is also a two-component mixture, and its old component is essentially identical to the model's, because zero-reward regions of <span class="math-inline">$\pi_{\theta_0}$</span> pass into <span class="math-inline">$\pi^*$</span> unchanged (reminder again that <span class="math-inline">$\pi^*$</span> is the closed-form optimizer of the KL-regularized objective, <span class="math-inline">$\pi^*(y) = \frac{1}{Z}\pi_{\theta_0}(y)e^{r(y)/\beta}$</span>. not the base model! not the &quot;real data&quot;!). The on-policy gradient draws outputs <span class="math-inline">$y \sim \pi_\theta$</span> and weights the gradient term at each draw by the log-ratio <span class="math-inline">$\log\big(\pi_\theta(y)/\pi^*(y)\big)$</span>. Every draw comes from one of the model's two components; there are 3 cases to check:</p>
+            <ul>
+            <li><strong>Draws y from the old component,</strong>  then the model's density comes from its old component and the target's density comes from <em>its</em> old component, and the two are nearly equal. The ratio <span class="math-inline">$\pi_\theta(y)/\pi^*(y)$</span> is close to one, its log is close to zero, and the gradient contribution is negligible.</li>
+            <li><strong>Draws y from the new component,</strong> then the new component sits partway between its initialization and the target's new component, so draws on the side nearer the target land where <span class="math-inline">$\pi^*(y)$</span> is comparatively large (log-ratio negative, probability pushed up), and draws on the far side land where <span class="math-inline">$\pi^*(y)$</span> is small (log-ratio positive, probability pushed down). The net effect on the component's mean is a step toward the target's new component. The update repeats from the new position, so the component translates across output space step by step.</li>
+            <li><strong>the components don’t widen for</strong> because widening would place the model's own density in the low-density region between the target's two components, and that is exactly the configuration reverse KL penalizes: <span class="math-inline">$\pi_\theta(y)$</span> large where <span class="math-inline">$\pi^*(y)$</span> is near zero makes the log-ratio weight large and positive.</li>
+            </ul>
+            <h2 id="my-takes"><strong>my takes</strong></h2>
+            <p>what i personally find magical is that all of this behavior of forgetting or lack of forgetting or stretching and sliding which is explained via KL divergence is inherent in the data, not in the presence of absence of the KL term in the objective function: <a href="https://arxiv.org/abs/2510.18874" target="_blank" rel="noopener noreferrer">Chen et al.</a> (§4)'s ablation ran 1) GRPO with <span class="math-inline">$\beta = 0$</span> 2) GRPO with the KL penalty 3) plain REINFORCE with no advantage estimator at all, and all three have similar levels of forgetting. the forgetting asymmetry is downstream of <em>where the score function gets evaluated</em>, which is downstream of who generates the samples, which in this case is on-policy data. some try to explain this with the parameter space: RL updates sparse subnetworks while SFT's updates are denser (<a href="https://arxiv.org/abs/2505.11711" target="_blank" rel="noopener noreferrer">Mukherjee et al. 2025</a>), and concurrent work attributes RL's robustness to an implicit bias toward small KL from initialization (<a href="https://arxiv.org/abs/2509.04259" target="_blank" rel="noopener noreferrer">Shenfeld et al. 2025</a>, &quot;RL's Razor&quot;). These are complementary - note that no claim above required examining which weights moved. but i would like to examine it in the next section.</p>
+            <h2 id="kl-vs-geometry"><strong>KL vs geometry</strong></h2>
+            <p>KL is a <em>vertical</em> comparison: we stack the densities at each point, take the log-ratio, and average them.</p>
+            <p>there is a second tradition for measuring distance between distributions.</p>
+            <p>there's a measurement called Wasserstein distance used in optimal transport which is <em>horizontal</em>: the Wasserstein distance treats <span class="math-inline">$p$</span> and <span class="math-inline">$q$</span> as piles of sand and asks for the minimum effort (mass times distance carried) to <em>reshape</em> one pile into the other.</p>
+            <p>KL is a coding cost; Wasserstein is a moving cost. KL grades like a multiple-choice test, where a nearly-right answer in the wrong location earns zero; Wasserstein grades like a map-reading test, where one centimeter off is nearly perfect and one kilometer off is bad.</p>
+            <p>the difference is that <strong>KL is blind to the geometry of the underlying space.</strong> for example, 2 narrow Gaussians with negligible overlap have an astronomically large KL whether their means are five units apart or five million. this means that KL saturates and stops encoding distance at all once the two distributions don't touch. Their Wasserstein distance is simply <span class="math-inline">$|\mu_1 - \mu_2|$</span>, informative at every range. This blindness has a famous gradient-side symptom: KL-family objectives give essentially no useful gradient between disjoint distributions, the motivating pathology behind the Wasserstein GAN (<a href="https://arxiv.org/abs/1701.07875" target="_blank" rel="noopener noreferrer">Arjovsky et al. 2017</a>). A geometry-blind judge cannot say &quot;the target is over <em>there</em>,&quot; because &quot;there&quot; is not a concept it has. the forward KL's stretching makes sense here: since the Gaussian penalty <span class="math-inline">$d^2/2\sigma^2$</span> measures distance only in the model's own units of width, inflating <span class="math-inline">$\sigma$</span> is the model's only way to shrink a distance under a judge that owns no ruler.</p>
+            <p>i want to also briefly talk about parameter space. When gradient descent nudges a location parameter like a Gaussian mean, moving the parameter <em>is</em> transporting the mass: shifting <span class="math-inline">$\mu$</span> by <span class="math-inline">$\delta$</span> carries the whole mode by <span class="math-inline">$\delta$</span>. And the reverse KL behavior of sliding (instead of widening) looks very much like this sand-moving and shaping action in optimal transport. I find this little smuggling of Wasserstein transport extremely interesting.</p>
+            <h2 id="parting-note"><strong>parting note</strong></h2>
+            <p>hopefully by now you have some intuition behind KL and its magic. i find these 3 ideas to be the most important to chew on:</p>
+            <ul>
+            <li><strong>The direction of the KL is not a design choice;</strong> it is a consequence of who generates the training samples.</li>
+            <li><strong>SFT forgetting is a normalization side effect</strong> where the loss deposits probability at the data's location and the conserved budget withdraws it from regions unchecked by the gradient; RL's old capabilities instead sit at a checked, zero-error fixed point of the model's own inspection.</li>
+            <li><strong>KL has no knowledge of the distance of drift</strong> but has interesting interactions with optimal transport which are up for more digging.</li>
+            </ul>
+            <p>some open research questions is this interaction between KL and other means of measurement from information theory like the geometry of the subspace the agent learns from or updates into, and empirical ways to utilize such findings of forward and backwards KL.</p>
+            <h2 id="references"><strong>References</strong></h2>
+            <p>[1] Chen, Razin, Narasimhan, Chen. &quot;Retaining by Doing: The Role of On-Policy Data in Mitigating Forgetting.&quot; arXiv:2510.18874, 2025.</p>
+            <p>[2] Korbak, Elsahar, Kruszewski, Dymetman. &quot;On Reinforcement Learning and Distribution Matching for Fine-Tuning Language Models with no Catastrophic Forgetting.&quot; NeurIPS 2022.</p>
+            <p>[3] Williams. &quot;Simple Statistical Gradient-Following Algorithms for Connectionist Reinforcement Learning.&quot; Machine Learning, 8:229–256, 1992.</p>
+            <p>[4] Minka. &quot;Divergence Measures and Message Passing.&quot; Microsoft Research Technical Report, 2005.</p>
+            <p>[5] Bishop. <em>Pattern Recognition and Machine Learning.</em> Springer, 2006.</p>
+            <p>[6] Tajwar, Singh, Sharma, Rafailov, Schneider, Xie, Ermon, Finn, Kumar. &quot;Preference Fine-Tuning of LLMs Should Leverage Suboptimal, On-Policy Data.&quot; ICML 2024.</p>
+            <p>[7] Shao et al. &quot;DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models.&quot; arXiv:2402.03300, 2024.</p>
+            <p>[8] Shenfeld, Pari, Agrawal. &quot;RL's Razor: Why Online Reinforcement Learning Forgets Less.&quot; arXiv:2509.04259, 2025.</p>
+            <p>[9] Lai et al. &quot;Reinforcement Fine-Tuning Naturally Mitigates Forgetting in Continual Post-Training.&quot; arXiv:2507.05386, 2025.</p>
+            <p>[10] Mukherjee, Yuan, Hakkani-Tur, Peng. &quot;Reinforcement Learning Finetunes Small Subnetworks in Large Language Models.&quot; arXiv:2505.11711, 2025.</p>
+            <p>[11] Arjovsky, Chintala, Bottou. &quot;Wasserstein GAN.&quot; ICML 2017.</p>
+            <p>[12] Jordan, Kinderlehrer, Otto. &quot;The Variational Formulation of the Fokker–Planck Equation.&quot; SIAM Journal on Mathematical Analysis, 29(1):1–17, 1998.</p>
+            <p>[13] Talagrand. &quot;Transportation Cost for Gaussian and Other Product Measures.&quot; Geometric and Functional Analysis, 6:587–600, 1996.</p>
+            <p>[14] Cuturi. &quot;Sinkhorn Distances: Lightspeed Computation of Optimal Transport.&quot; NeurIPS 2013.</p>
+            <p>[15] Peyré, Cuturi. &quot;Computational Optimal Transport.&quot; Foundations and Trends in Machine Learning, 2019.</p>
+            <h1 id="appendix"><strong>appendix</strong></h1>
+            <h2 id="appendix-background"><strong>background: entropy, cross-entropy, and KL: one picture</strong></h2>
+            <p>we have two distributions:</p>
+            <ul>
+            <li><strong>reference distribution <span class="math-inline">$P$</span></strong> = produces the irl outcomes</li>
+            <li><strong>model distribution <span class="math-inline">$Q$</span></strong> = predicts the outcomes</li>
+            </ul>
+            <p>with respect to these distributions,</p>
+            <ul>
+            <li><strong>Entropy <span class="math-inline">$H(P)$</span></strong> is how unpredictable <span class="math-inline">$P$</span> inherently is.</li>
+            <li><strong>Cross-entropy <span class="math-inline">$H(P,Q)$</span></strong> is how surprised you are when predicting <span class="math-inline">$P$</span> using <span class="math-inline">$Q$</span>.</li>
+            <li><strong>KL divergence <span class="math-inline">$D_{\mathrm{KL}}(P \Vert Q)$</span></strong> is how much extra surprise comes <em>specifically</em> from <span class="math-inline">$Q$</span> being wrong.</li>
+            </ul>
+            <p>The relationship:</p>
+            <div class="math-display">$$\boxed{\text{cross-entropy} = \text{entropy} + \text{KL divergence}}$$</div>
+            <p>Concretely, take a real, fair coin, <span class="math-inline">$P(H) = P(T) = 0.5$</span>. your model is overconfident, <span class="math-inline">$Q(H) = 0.9$</span>, <span class="math-inline">$Q(T) = 0.1$</span>.</p>
+            <ul>
+            <li>A fair coin inherently costs <span class="math-inline">$H(P) = -\log_2(1/2) = 1$</span> bit to predict.</li>
+            <li>the cost, or surprisal, of predicting this reality <em>with</em> our overconfident model is the cross entropy:</li>
+            </ul>
+            <div class="math-display">$$H(P, Q) = -\tfrac{1}{2}\log_2(0.9) - \tfrac{1}{2}\log_2(0.1) \approx 1.737 \text{ bits},$$</div>
+            <p>the KL divergence is the difference, <span class="math-inline">$0.737$</span> bits, which can be seen as the penalty for the wrong probabilities.</p>
+            <p>i like to think of it as: <strong>entropy = unavoidable surprise, KL = avoidable surprise, cross-entropy = all the surprise.</strong></p>
+            <p>surprise is <span class="math-inline">$-\log p$</span> which is the code length of encoding the event that has probability p of occurring, and it grows without bound as the assigned probability shrinks. to gain intuition: if you believe an event happens with probability <span class="math-inline">$1/2$</span>, the surprise or the cost is 1 bit when it happens; for <span class="math-inline">$1/1024$</span> it costs 10. thus, if your model calls something rare but in reality it happens often, the cost is huge. this is what papers call &quot;exploding tail&quot; and what &quot;causes asymmetry&quot;. hold on to this!</p>
+            <h2 id="appendix-sampling"><strong>technical explanation of sampling and KL</strong></h2>
+            <p><strong>SFT:</strong> Here <span class="math-inline">$D = \pi^*$</span>, which does not depend on <span class="math-inline">$\theta$</span> and is fixed, so the expectation gradient</p>
+            <div class="math-display">$$\nabla_\theta\, \mathbb{E}_{y \sim \pi^*}\big[-\log \pi_\theta(y)\big] = \mathbb{E}_{y \sim \pi^*}\big[-\nabla_\theta \log \pi_\theta(y)\big].$$</div>
+            <p>read the right-hand side. Each sample <span class="math-inline">$y$</span> comes from the dataset, and the gradient term <span class="math-inline">$\nabla_\theta \log \pi_\theta(y)$</span> is computed at that sample. So every gradient contribution is computed at a location chosen by the data. If the data lies in a region where the model currently assigns low probability, the gradient is still computed there. The model has no say in where it receives training signal.</p>
+            <p><strong>RL</strong> Here <span class="math-inline">$D = \pi_\theta$</span>. Now the sampling distribution itself depends on <span class="math-inline">$\theta$</span>, so the gradient cannot simply move inside the expectation: changing <span class="math-inline">$\theta$</span> changes both the integrand and which samples you see. The standard fix is the log-derivative trick. Start from the identity</p>
+            <div class="math-display">$$\nabla_\theta \pi_\theta(y) = \pi_\theta(y)\, \nabla_\theta \log \pi_\theta(y),$$</div>
+            <p>which is just the chain rule applied to <span class="math-inline">$\log$</span>. Applying it to the expected reward:</p>
+            <div class="math-display">$$\nabla_\theta\,\mathbb{E}_{y \sim \pi_\theta}[r(y)] = \mathbb{E}_{y \sim \pi_\theta}\big[r(y)\,\nabla_\theta \log \pi_\theta(y)\big].$$</div>
+            <p>This is the REINFORCE estimator (Williams 1992). The procedure it describes: generate outputs from the current model, score each one with the reward, and weight each output's gradient by its score. Again read where the gradient term is computed: at the model's own samples. The model only receives training signal in regions it actually visits.</p>
+            <p>another piece of intuition: the expected gradient of the log-probability, taken under the model's own distribution, is always zero:</p>
+            <div class="math-display">$$\mathbb{E}_{y \sim \pi_\theta}\big[\nabla_\theta \log \pi_\theta(y)\big] = \sum_y \nabla_\theta \pi_\theta(y) = \nabla_\theta \sum_y \pi_\theta(y) = \nabla_\theta 1 = 0.$$</div>
+            <p>Any parameter change that raises probability on some outputs must lower it on others, and averaged over the model's own distribution, these changes cancel. this has 2 consequences. First, adding a constant to the reward does not change the expected gradient, which is why baselines and group-relative advantages (as in GRPO) are valid. Second, constant terms like <span class="math-inline">$\log Z$</span> drop out of any gradient expression of this form.</p>
+            <p><strong>The two cases produce the two KL directions.</strong> Differentiate the reverse KL, <span class="math-inline">$\mathrm{KL}[\pi_\theta \Vert \pi^*]$</span>, using the log-derivative trick and the lemma. Substituting <span class="math-inline">$\log \pi^* = \log \pi_{\theta_0} + r/\beta - \log Z$</span> and dropping the constant via the lemma:</p>
+            <div class="math-display">$$-\beta\, \nabla_\theta\, \mathrm{KL}[\pi_\theta \Vert \pi^*] = \mathbb{E}_{y \sim \pi_\theta}\Big[\Big(r(y) - \beta \log \tfrac{\pi_\theta(y)}{\pi_{\theta_0}(y)}\Big)\, \nabla_\theta \log \pi_\theta(y)\Big].$$</div>
+            <p>Compare this to the policy gradient of the KL-regularized RL objective from the previous section: they are the same!!</p>
+            <p>what we are basically saying is that the update an RL trainer computes is a Monte Carlo <strong>estimate of the reverse-KL gradient</strong>. Similarly, the SFT update is a Monte Carlo estimate of the forward-KL gradient, since the SFT loss equals the forward KL up to a constant.</p>
+            <p>Could either method use the other direction? No, because each is missing the required sampler. Estimating the forward-KL gradient requires samples from <span class="math-inline">$\pi^*$</span>. An RL setup has a reward function, but no dataset of samples from the optimal policy, so it cannot form that estimate. Estimating the reverse-KL gradient requires scoring the model's own samples against <span class="math-inline">$\pi^*$</span>. An SFT setup has samples from <span class="math-inline">$\pi^*$</span>, but no reward function to score model generations, so it cannot form that estimate either. Each method uses the only KL direction its data source can support.</p>
+        </article>
+    </main>
+</body>
+</html>

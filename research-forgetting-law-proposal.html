@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Research proposal testing whether the KL forgetting law predicts recovery after fine-tuning.">
+    <title>Distance Is Not Damage — Full Research Proposal</title>
+    <link rel="stylesheet" href="research-blog.css">
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']],
+                processEscapes: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+            }
+        };
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <a href="index.html#research" class="home-arrow" aria-label="back to research ideas">&#8592;</a>
+    <main class="article-shell">
+        <article class="research-article">
+            <h1 id="distance-is-not-damage">Distance Is Not Damage</h1>
+            <h2 id="does-the-kl-forgetting-law-predict-what-can-be-recovered-after-fine-tuning">Does the KL forgetting law predict what can be recovered after fine-tuning?</h2>
+            <p><strong>Research proposal — revised August 2026</strong></p>
+            <blockquote><strong>Contribution in one sentence.</strong> Prior work shows that new-task KL predicts the <em>immediate magnitude</em> of forgetting; this project tests whether it also predicts <em>recovery</em>, and whether recovery requires a second axis determined by externally supplied information and the geometry of the update, beginning with a preregistered full-fine-tuning versus rank-8 LoRA contrast.</blockquote>
+            <h2 id="abstract">Abstract</h2>
+            <p>Fine-tuning can reduce a model's performance on capabilities learned earlier. Shenfeld, Pari, and Agrawal (2025) show that the forward KL divergence from the base policy, evaluated on the new task, predicts the magnitude of this drop in a controlled setting (<span class="math-inline">$R^2=0.96$</span>) and remains predictive in LLM experiments (<span class="math-inline">$R^2=0.71$</span>). That result says how much performance is lost at the end of fine-tuning. It does not say whether the loss reflects inaccessible knowledge that can be cheaply restored or overwritten knowledge that must be learned again.</p>
+            <p>This proposal asks whether the KL forgetting law extends from <em>damage now</em> to <em>recovery later</em>. We first reproduce the KL–forgetting relationship on ParityMNIST/FashionMNIST while crossing two independent factors: training objective (off-policy SFT or on-policy learning) and update parameterization (full fine-tuning or rank-8 LoRA). We then run a controlled sequential-learning experiment in which the new task's prompts, output lengths, token marginals, and training objective are held fixed while the prompt–target association is varied from base-derived to randomly permuted. The latter mapping is information the base model cannot know and therefore must be acquired from the fine-tuning data. We independently vary capacity pressure and update geometry, sweep learning rates and steps to create overlapping KL and immediate-forgetting ranges, and attach the same preregistered recovery protocol to every checkpoint.</p>
+            <p>The primary outcome is recovery advantage over a matched model that never learned the old task. Candidate predictors are new-task KL, immediate forgetting, new-task compression advantage, old-task code-length loss, fixed and freshly fitted probes, representational drift, update-subspace geometry, and local sharpness. The primary analysis tests out-of-sample prediction; the randomized information-load manipulation and full-versus-low-rank contrast test different parts of the mechanism. The result will establish either that KL is a sufficient practical signal for both forgetting and recovery, or that checkpoints at the same behavioral distance can differ because they wrote different information or took different geometric paths.</p>
+            <h2 id="1-the-problem">1. The problem</h2>
+            <p>Suppose a model's score on an earlier task falls from 80% to 30% after fine-tuning. There are at least two operationally different explanations:</p>
+            <ol>
+            <li><strong>Access loss:</strong> useful internal structure remains, but the model no longer maps the task to the right behavior. A small alignment intervention may restore performance.</li>
+            <li><strong>Content loss:</strong> task-specific information no longer provides a measurable learning advantage. Restoring performance requires reacquiring it from data.</li>
+            </ol>
+            <p>The observed 50-point drop does not distinguish these cases. Neither does the fact that the final checkpoint moved far from the base model. The distinction matters in opposite directions for continual learning and unlearning: a practitioner wants ordinary forgetting to be cheap to reverse, while an unlearning claim is weak if a small intervention restores the target behavior.</p>
+            <p>What makes this problem scientifically exciting is that recovery may expose a hidden axis of model state. Two checkpoints can look equally damaged on task A, equally successful on task B, and equally far from the base under new-task KL, yet one may recover from a few task-format cues while the other may need the original facts and a substantial retraining budget. That pair is a natural experiment: the behavioral endpoint is held fixed while the latent condition that determines what can come back is allowed to vary. Finding a checkpoint-readable signal for that condition would turn forgetting from a scalar score into a diagnosis of what kind of intervention the model needs—and would reveal where a strong empirical law about <em>damage</em> stops being a theory of <em>retention</em>.</p>
+            <p>The proposed project is deliberately narrower than a general theory of forgetting. It asks one predictive question and two mechanistic questions:</p>
+            <ul>
+            <li><strong>Predictive:</strong> Given a fine-tuned checkpoint, does new-task KL forecast its subsequent recovery curve?</li>
+            <li><strong>Mechanistic:</strong> At matched KL and immediate forgetting, does externally supplied information load change recovery?</li>
+            <li><strong>Geometric:</strong> At matched new-task performance, KL, and immediate forgetting, does a rank-8 update constraint change what remains decodable and how cheaply the old task recovers?</li>
+            </ul>
+            <h2 id="2-what-is-known-and-what-is-missing">2. What is known, and what is missing</h2>
+            <div class="table-wrap"><table><thead><tr><th>Question</th><th>Current evidence</th><th>What remains open here</th></tr></thead><tbody>
+            <tr><td>Does new-task KL predict immediate forgetting?</td><td>Yes in the settings studied by <a href="https://arxiv.org/abs/2509.04259" target="_blank" rel="noopener noreferrer">Shenfeld et al. (2025)</a>: <span class="math-inline">$R^2=0.96$</span> on ParityMNIST and <span class="math-inline">$R^2=0.71$</span> in their LLM experiments.</td><td>Replication is required before extending the result.</td></tr>
+            <tr><td>Can equal behavioral loss differ in recoverability?</td><td>Yes. <a href="https://arxiv.org/abs/2501.13453" target="_blank" rel="noopener noreferrer">Zheng et al. (2025)</a> demonstrate rapid recovery after apparent forgetting; <a href="https://arxiv.org/abs/2505.16831" target="_blank" rel="noopener noreferrer">Xu et al. (2025)</a> map reversible and budget-resistant regimes in unlearning.</td><td>The ordinary-fine-tuning setting has not been connected to the KL law.</td></tr>
+            <tr><td>Are there pre-recovery diagnostic candidates?</td><td>Yes. Xu et al. find representation drift predictive under fixed unlearning protocols; <a href="https://arxiv.org/abs/2502.05374" target="_blank" rel="noopener noreferrer">Fan et al. (2025)</a> motivate smoothness as a defense against relearning attacks.</td><td>No head-to-head, cross-task comparison with KL and information measures has established a general predictor.</td></tr>
+            <tr><td>Are standard output metrics sufficient?</td><td>No. <a href="https://arxiv.org/abs/2506.12618" target="_blank" rel="noopener noreferrer">OpenUnlearning</a> shows that commonly used metrics vary in faithfulness and robustness; <a href="https://arxiv.org/abs/2602.06248" target="_blank" rel="noopener noreferrer">REBEL</a> recovers behavior missed by static prompts.</td><td>A recovery outcome should not be defined by a single prompt or one post-fine-tuning score.</td></tr>
+            <tr><td>Does information acquired during the new task predict recovery of the old task?</td><td>Compression-based work can measure memorization and behavior change in bits (<a href="https://arxiv.org/abs/2505.24832" target="_blank" rel="noopener noreferrer">Morris et al., 2025</a>; <a href="https://arxiv.org/abs/2607.21351" target="_blank" rel="noopener noreferrer">Tan et al., 2026</a>).</td><td>This has not been tested as a predictor of recovery after ordinary fine-tuning.</td></tr>
+            <tr><td>Does LoRA rank determine forgetting or recovery?</td><td><a href="https://arxiv.org/abs/2405.09673" target="_blank" rel="noopener noreferrer">Biderman et al. (2024)</a> find that standard low-rank LoRA often learns less and forgets less than full fine-tuning; a recent preprint links LoRA forgetting to task-gradient subspace angles (<a href="https://arxiv.org/abs/2603.02224" target="_blank" rel="noopener noreferrer">Steele, 2026</a>).</td><td>Existing evidence does not establish that low rank is intrinsically “access loss,” that full fine-tuning is “overwrite,” or that rank predicts recovery after KL and immediate damage are matched.</td></tr>
+            </tbody></table></div>
+            <p>The gap is therefore not “nobody has studied reversibility.” That would be false. The gap is the missing crossing: <strong>no cited work tests whether the new-task KL law predicts recovery after ordinary fine-tuning, or whether controlled information load and update geometry add predictive signal at matched KL and immediate damage.</strong></p>
+            <h2 id="3-how-the-cited-literatures-fit-together">3. How the cited literatures fit together</h2>
+            <h3 id="3-1-from-catastrophic-interference-to-recoverability">3.1 From catastrophic interference to recoverability</h3>
+            <p>The original catastrophic-forgetting problem was formulated as <strong>catastrophic interference</strong>: after a connectionist network learns one mapping, gradient updates for a second mapping can abruptly destroy performance on the first (<a href="https://doi.org/10.1016/S0079-7421(08" target="_blank" rel="noopener noreferrer">McCloskey &amp; Cohen, 1989</a>60536-8)). This is an instance of the stability–plasticity dilemma. A learner must remain plastic enough to acquire task B while preserving structure that task A still needs. Because the task-B objective contains no term that values task A, ordinary gradient descent has no reason to protect that structure.</p>
+            <p>Classical continual-learning methods attacked different parts of this optimization problem. <strong>Regularization</strong> methods such as elastic weight consolidation penalize movement in parameters estimated to matter for previous tasks (<a href="https://doi.org/10.1073/pnas.1611835114" target="_blank" rel="noopener noreferrer">Kirkpatrick et al., 2017</a>). <strong>Rehearsal</strong> methods interleave stored or generated task-A examples with task-B training. <strong>Parameter-isolation and expansion</strong> methods freeze, mask, or add components so new learning cannot freely reuse every old parameter. These families remain important engineering baselines, but their standard evaluation usually treats forgetting as one quantity: the drop in task-A performance after learning B.</p>
+            <p>That scalar view began to fracture when representation-level work showed that behavioral failure need not imply representational destruction. <a href="https://openaccess.thecvf.com/content/CVPR2022/html/Davari_Probing_Representation_Forgetting_in_Supervised_and_Unsupervised_Continual_Learning_CVPR_2022_paper.html" target="_blank" rel="noopener noreferrer">Davari et al. (2022)</a> found cases where a fresh linear classifier could still decode old-task labels after the deployed classifier failed. In language models, <a href="https://arxiv.org/abs/2501.13453" target="_blank" rel="noopener noreferrer">Zheng et al. (2025)</a> showed that early fine-tuning can disrupt task alignment and produce severe but rapidly reversible behavioral forgetting. These results do not prove that all forgotten information survives; they show that terminal accuracy alone cannot tell us how much survives in a usable form.</p>
+            <p>Foundation-model post-training makes the distinction harder and more consequential. A single model supports many capabilities through shared representations and a shared output interface; there is no clean task-specific head whose failure can always be isolated. SFT, reinforcement learning, tool-use training, safety tuning, and domain adaptation can all improve a target behavior while moving unmeasured capabilities. <a href="https://arxiv.org/abs/2509.04259" target="_blank" rel="noopener noreferrer">Shenfeld et al. (2025)</a> supply an unusually strong behavioral regularity—new-task forward KL predicts the immediate magnitude of forgetting—while unlearning research makes recovery an explicit adversarial test. The historical progression therefore leads directly to this proposal's pivot: <strong>from asking only how much task-A performance fell to asking what evidence of task A remains and what budget is required to make it usable again.</strong></p>
+            <h3 id="3-2-kl-supplies-the-baseline-predictor">3.2 KL supplies the baseline predictor</h3>
+            <p>Shenfeld et al. provide the empirical law this project tries to extend. Their result also supplies the first testbed, metric definition, hyperparameter-sweep strategy, oracle policy construction, and competing-predictor format. Their on-policy result is relevant because it explains how different training procedures populate different parts of the KL range; it is not evidence by itself about recovery.</p>
+            <p>Their distillation result should be interpreted narrowly. An SFT student trained on outputs from an RL teacher matched the teacher's measured learning–forgetting trade-off. This supports a final-policy account of <em>immediate forgetting on the measured distributions</em>. It does not establish that the two models are identical distributions everywhere, nor that their recovery dynamics must match.</p>
+            <h3 id="3-3-continual-learning-and-unlearning-supply-the-outcome">3.3 Continual learning and unlearning supply the outcome</h3>
+            <p>Zheng et al. show that severe behavioral forgetting can coexist with strong recovery after limited retraining, motivating access loss as a real phenomenon. Xu et al. formalize reversibility under a bounded relearning protocol and show that representation diagnostics can separate regimes within their unlearning setup. These papers justify measuring an entire recovery curve rather than treating the terminal accuracy drop as erasure.</p>
+            <p><a href="https://openaccess.thecvf.com/content/CVPR2022/html/Davari_Probing_Representation_Forgetting_in_Supervised_and_Unsupervised_Continual_Learning_CVPR_2022_paper.html" target="_blank" rel="noopener noreferrer">Davari et al. (2022)</a> further show why behavioral and representational forgetting should be separated with linear probes. This proposal makes that distinction explicit: a probe fitted once at <span class="math-inline">$\theta_0$</span> detects whether the old coordinate/readout remains stable, while a fresh probe fitted at each checkpoint detects whether task-A labels remain linearly decodable after the representation moves. A fresh probe is allowed to learn from A labels, so it measures usable information for that probe class—not zero-shot access by the deployed model and not literal bits stored in the weights.</p>
+            <p>Unlearning evidence is transferred cautiously. Unlearning objectives intentionally suppress a target behavior; ordinary fine-tuning optimizes a different task. A predictor that works in unlearning may fail in sequential fine-tuning. Testing that transfer is part of the contribution, not an assumption.</p>
+            <h3 id="3-4-compression-supplies-a-measurement-and-a-task-design-principle">3.4 Compression supplies a measurement and a task-design principle</h3>
+            <p>For a target dataset <span class="math-inline">$D=\{(x_i,y_i)\}$</span>, define the behavior-write quantity</p>
+            <div class="math-display">$$W(D;\theta_0,\theta)=\sum_i \left[-\log_2 p_{\theta_0}(y_i\mid x_i)+\log_2 p_{\theta}(y_i\mid x_i)\right].$$</div>
+            <p>This is a change in conditional code length on specified targets. On uniformly random targets, where generalization is ruled out by construction, compression advantage is evidence of memorization. On natural text, <span class="math-inline">$W$</span> mixes memorization, generalization, and changes in output convention. It is therefore a <strong>behavioral code-length measure</strong>, not a literal census of bits physically located in particular weights. Tan et al.'s excess statistic, which subtracts a size-matched held-out change, helps isolate training-specific information but does not remove every semantic or surface-form confound.</p>
+            <p>The distinction is load-bearing. The experiment separately measures:</p>
+            <ul>
+            <li><span class="math-inline">$B_{\text{new}}$</span>: excess compression advantage on the new task, calibrated with random associations;</li>
+            <li><span class="math-inline">$L_{\text{old}}$</span>: increase in code length on old-task targets after fine-tuning;</li>
+            <li><span class="math-inline">$C_{\text{recovery}}$</span>: recovery behavior under a protocol that does not use either code-length quantity as its label.</li>
+            </ul>
+            <h3 id="3-5-what-task-design-can-and-cannot-guarantee">3.5 What task design can and cannot guarantee</h3>
+            <p>The input data are the cleanest available lever because the internal mechanism cannot be assigned directly.</p>
+            <div class="table-wrap"><table><thead><tr><th>Fine-tuning content</th><th>External target information introduced?</th><th>Expected training-specific write</th><th>Role in the experiment</th></tr></thead><tbody>
+            <tr><td>Random prompt–value associations or random strings</td><td><strong>Yes, by construction</strong></td><td>High if successfully learned</td><td>Positive control for deposition</td></tr>
+            <tr><td>Targets sampled or selected from the base model</td><td>No information outside the base/data-generation system</td><td>Often low, but not guaranteed to be zero</td><td>Sharpening/reweighting control</td></tr>
+            <tr><td>Deterministic format or style transformation</td><td>Little semantic information; the rule itself still has a description length</td><td>Near zero after held-out subtraction if the rule generalizes</td><td>Access/format control</td></tr>
+            </tbody></table></div>
+            <p><a href="https://arxiv.org/abs/2412.01951" target="_blank" rel="noopener noreferrer">Huang et al. (2025)</a> show why self-improvement cannot create information absent from the model and formalize self-improvement as sharpening. This constrains <em>epistemic novelty</em>. It does <strong>not</strong> imply that self-training makes zero parameter changes or that <span class="math-inline">$W(D)$</span> must be exactly zero: a model can sharpen, re-encode, or memorize a sampled transcript without acquiring an externally supplied fact. Likewise, on-policy RL can only learn an exact random secret if it samples informative reward-bearing outputs; failure to do so is a coverage limitation, not a clean recovery comparison.</p>
+            <p>The primary causal contrast therefore uses SFT in every cell and changes only the prompt–target association. SFT versus RL is a secondary method comparison on tasks both methods can solve.</p>
+            <h3 id="3-6-low-rank-constrains-the-update-it-does-not-name-the-mechanism">3.6 Low rank constrains the update; it does not name the mechanism</h3>
+            <p>LoRA and SFT are not competing categories. SFT specifies a loss and source of targets; LoRA specifies which parameter updates are allowed. The experiment must therefore cross <strong>objective/data</strong> with <strong>update parameterization</strong>, rather than call one cell “SFT” and another “LoRA.”</p>
+            <p>For a pretrained matrix <span class="math-inline">$W_0$</span>, <a href="https://arxiv.org/abs/2106.09685" target="_blank" rel="noopener noreferrer">Hu et al. (2021)</a> define a frozen-base update</p>
+            <div class="math-display">$$W = W_0 + \Delta W,
+            \qquad
+            \Delta W = \frac{\alpha}{r}BA,
+            \qquad
+            \operatorname{rank}(\Delta W)\le r.$$</div>
+            <p>This is an additive low-rank constraint. It is not generally an orthogonal rotation, and it does not imply that the adapter can only memorize. Conversely, full fine-tuning permits high-rank updates but does not imply that useful content was overwritten. “Rotation” will be used here only as shorthand for an <strong>access/reorientation hypothesis</strong>—old information remains decodable but the deployed readout or task alignment changes—not as a claim that the learned weight matrices are literal rotation matrices. <a href="https://arxiv.org/abs/2501.13453" target="_blank" rel="noopener noreferrer">Zheng et al. (2025)</a> provide evidence that early apparent forgetting can reflect task-alignment disruption; <a href="https://arxiv.org/abs/2605.10973" target="_blank" rel="noopener noreferrer">Jin et al. (2026)</a> show that penalizing changes in projected pretrained singular subspaces can improve the in-domain/OOD trade-off. Neither result establishes the proposed LoRA/full dichotomy.</p>
+            <p>The empirical literature gives competing predictions. <a href="https://arxiv.org/abs/2405.09673" target="_blank" rel="noopener noreferrer">Biderman et al. (2024)</a> find that standard LoRA settings often learn less of the target task and forget less of the source domain than full fine-tuning, while many learning–forgetting points lie on similar Pareto frontiers. Thus lower forgetting can be under-adaptation rather than a distinct preservation mechanism. <a href="https://arxiv.org/abs/2607.21351" target="_blank" rel="noopener noreferrer">Tan et al. (2026)</a> find that writable bits depend strongly on placement and pretrained structure and need not grow smoothly with rank. A recent single-author preprint reports that rank effects on forgetting interact with the principal angles between task-gradient subspaces (<a href="https://arxiv.org/abs/2603.02224" target="_blank" rel="noopener noreferrer">Steele, 2026</a>); this is treated as a candidate covariate to test, not an established law.</p>
+            <p>The recoverability question is therefore sharper than “does LoRA forget less?” It is:</p>
+            <blockquote>Among checkpoints with the same task-B performance, new-task KL, and immediate task-A damage, does rank-8 LoRA leave a different recovery curve from full fine-tuning, and is that difference explained by written bits, probe behavior, or update-subspace geometry?</blockquote>
+            <p>Disabling a LoRA adapter is a useful implementation sanity check because it should exactly restore the frozen base. It is <strong>not</strong> a valid recovery result: it also deletes the learned task-B behavior. Every reported recovery curve keeps the task-B update active and measures task-B retention alongside task-A restoration.</p>
+            <h3 id="3-7-scaling-laws-supply-experimental-discipline">3.7 Scaling laws supply experimental discipline</h3>
+            <p>The scaling-law literature matters here less because this project expects one universal power law and more because it demonstrates how easily an apparent law can be an artifact of the experimental budget. <a href="https://arxiv.org/abs/2001.08361" target="_blank" rel="noopener noreferrer">Kaplan et al. (2020)</a> and <a href="https://arxiv.org/abs/2203.15556" target="_blank" rel="noopener noreferrer">Hoffmann et al. (2022)</a> reached different compute-optimal prescriptions after changing which data, model-size, and training-horizon regimes were measured. Later reanalyses and replications showed that warmup schedules, compute accounting, optimizer retuning, fitting procedures, and uncertainty estimates can materially change the fitted frontier (<a href="https://arxiv.org/abs/2406.19146" target="_blank" rel="noopener noreferrer">Porian et al., 2024</a>; <a href="https://arxiv.org/abs/2404.10102" target="_blank" rel="noopener noreferrer">Besiroglu et al., 2024</a>). The lesson is not that empirical laws are fragile; it is that the law is only defined on a declared resource surface.</p>
+            <p>This proposal applies that lesson to forgetting and recovery. A single full-versus-LoRA operating point cannot distinguish update geometry from under-training, so learning rates and step budgets are tuned independently and comparisons are restricted to common support in task-B performance, KL, and immediate task-A damage. Writable capacity is reported at a declared exposure and optimization budget rather than treated as an architecture constant. Full parameter count, trainable parameter count, adapter placement, declared rank, and realized effective-update statistics are reported separately. Recovery is a response curve over examples, tokens, and optimizer steps—not a success/failure label at one arbitrary budget.</p>
+            <p>The predictive analysis follows the same discipline. Dense checkpoints from one run remain in one fold; entire mapping seeds and task templates are held out; later validation holds out a model scale. Functional forms are compared out of sample, and uncertainty and calibration are reported alongside <span class="math-inline">$R^2$</span>. The aim is therefore stronger than fitting a curve through a large sweep: it is to determine which relationship survives when the task, mapping, budget, and eventually scale change.</p>
+            <h3 id="3-8-why-the-answer-matters">3.8 Why the answer matters</h3>
+            <p>The project connects a mechanistic question to three concrete decisions:</p>
+            <ol>
+            <li><strong>Remediation triage.</strong> If a checkpoint mainly lost access, cue-only or small alignment datasets may recover task A without expensive replay. If its recovery advantage over a never-knew model has collapsed, the intervention must instead supply task-A content. A calibrated predictor can choose which audit to run first and estimate a plausible budget range.</li>
+            <li><strong>Unlearning verification.</strong> Suppressed outputs are not evidence that target information is difficult to recover. A procedure that only changes access may satisfy a static benchmark while failing the operational deletion goal. Recovery curves, content-sensitive code length, and never-knew controls provide a stricter audit, while the proposal remains careful not to equate finite-budget resistance with proof that information is absent from every weight.</li>
+            <li><strong>Post-training and continual-learning design.</strong> KL-conservative objectives, replay, freezing, full fine-tuning, and parameter-efficient updates can be compared not only by task-B learning and immediate retention but by the future cost of restoring task A while preserving B. This matters when original data may later be unavailable, when a model will undergo many sequential updates, or when a consolidation pipeline is about to discard an adapter or checkpoint that contains the cheapest route back.</li>
+            </ol>
+            <p>The deployment limit is equally important. Checkpoint statistics cannot reconstruct task-A facts that are genuinely unavailable, and a no-old-data predictor cannot certify post-intervention success without some definition or evaluation of task A. The realistic product is a triage policy that recommends a treatment class, budget range, confidence, or explicit abstention—not an oracle that recovers unspecified knowledge from weights alone.</p>
+            <h2 id="4-research-questions-and-preregistered-hypotheses">4. Research questions and preregistered hypotheses</h2>
+            <h3 id="rq1-replication">RQ1 — Replication</h3>
+            <p>Does forward KL on the new task reproduce the published relationship with immediate forgetting?</p>
+            <p><strong>H1.</strong> Across methods, schedules, learning rates, and checkpoints in ParityMNIST, new-task KL explains most variation in FashionMNIST forgetting and outperforms weight-distance baselines.</p>
+            <h3 id="rq2-prediction">RQ2 — Prediction</h3>
+            <p>Does new-task KL predict recovery after ordinary fine-tuning?</p>
+            <p><strong>H2.</strong> KL alone predicts some recovery variation because it predicts immediate damage, but a model that also observes immediate forgetting and information/geometry measures will improve held-out recovery prediction.</p>
+            <p>The strict null is useful: if grouped cross-validation shows no material gain beyond KL and immediate forgetting, the KL law extends operationally to recovery in the tested domain.</p>
+            <h3 id="rq3-mechanism">RQ3 — Mechanism</h3>
+            <p>Does externally supplied information load alter recovery at matched KL and immediate forgetting?</p>
+            <p><strong>H3.</strong> The effect of information load is conditional on capacity pressure. Novel associations should make recovery harder primarily as the new dataset approaches the measured writable capacity of the trainable parameterization. A main effect of random targets without an information-load × capacity-pressure interaction is insufficient evidence for capacity displacement.</p>
+            <p>The design separately identifies <strong>novelty</strong> from <strong>conflict</strong>. Permuting an association attached to a familiar key can both introduce information and override probability mass that <span class="math-inline">$heta_0$</span> assigns to the original association. A fresh-key cell, verified to have no systematic base preference over candidate values, supplies novel associations without that contradiction.</p>
+            <h3 id="rq4-rank-and-update-geometry">RQ4 — Rank and update geometry</h3>
+            <p>Does rank-8 LoRA change recovery relative to full fine-tuning after matching task-B performance, new-task KL, and immediate task-A forgetting?</p>
+            <p><strong>H4a.</strong> At matched task-B performance, rank-8 LoRA will usually show less immediate task-A forgetting than full fine-tuning. This tests whether a published learning–forgetting pattern transfers to the present setting and is not yet the recovery contribution.</p>
+            <p><strong>H4b.</strong> After additionally matching KL and immediate forgetting, update parameterization will retain incremental predictive value for the recovery curve if endpoint behavioral distance is not sufficient. The directional mechanism is deliberately tested rather than assumed: an access/reorientation result would combine a larger fixed-versus-fresh probe gap with preserved old-task code length and positive recovery advantage; a rewrite result would combine fresh-probe loss, old-task code-length loss, and recovery approaching the never-knew baseline.</p>
+            <p><strong>H4c — angle-conditioned rank invariance.</strong> Steele's recent preprint predicts that LoRA rank has little effect on immediate forgetting when the principal angle between task-gradient subspaces is high, with stronger rank effects when task subspaces are similar. The direct extension tested here is: <strong>does rank stop mattering for what comes back, too, when task-subspace angles are high?</strong> Convergence of rank-conditioned recovery curves in the high-angle regime would extend the proposed law from forgetting to recoverability; divergence would establish its boundary.</p>
+            <h3 id="rq5-competing-signatures">RQ5 — Competing signatures</h3>
+            <p>Which pre-recovery signal generalizes across task templates and model scales?</p>
+            <ul>
+            <li><strong>Access/interference signature:</strong> large immediate behavioral loss, little old-task code-length loss, representational reorientation, and recovery from task-format cues that contain no old facts.</li>
+            <li><strong>Rewrite/capacity signature:</strong> high new-task deposition under high capacity pressure, old-task code-length loss, and little recovery advantage over a matched model that never learned the old task.</li>
+            <li><strong>Geometry signature:</strong> recovery tracks update rank/spectrum, task-gradient subspace angle, or preregistered sharpness after controlling for KL, immediate forgetting, information load, and task performance.</li>
+            </ul>
+            <p>These are signatures, not mutually exclusive ontologies. A model can experience access loss and content loss in the same run.</p>
+            <h2 id="5-experimental-design">5. Experimental design</h2>
+            <h3 id="5-1-phase-0-reproduce-the-kl-law">5.1 Phase 0: reproduce the KL law</h3>
+            <p>Reproduce the ParityMNIST/FashionMNIST setup from Shenfeld et al.:</p>
+            <ul>
+            <li>3-layer MLP with dimensions <span class="math-inline">$785\rightarrow512\rightarrow256\rightarrow10$</span>;</li>
+            <li>flattened image plus task indicator (<span class="math-inline">$+1$</span> for ParityMNIST, <span class="math-inline">$-1$</span> for FashionMNIST);</li>
+            <li>joint pretraining on 500 examples per task;</li>
+            <li>ParityMNIST SFT labelings, on-policy objectives, and the base-conditioned oracle target distribution;</li>
+            <li>15 log-spaced learning rates from <span class="math-inline">$3\times10^{-6}$</span> to <span class="math-inline">$10^{-3}$</span>, two schedules, and one/two epochs;</li>
+            <li>float32 training, checkpoint-level metrics, and at least three seeds for the confirmatory run.</li>
+            </ul>
+            <p>Beginning in Week 1, cross the two primary objectives with two update parameterizations:</p>
+            <div class="table-wrap"><table><thead><tr><th>Factor</th><th>Primary levels</th><th>Purpose</th></tr></thead><tbody>
+            <tr><td>Objective/data path</td><td>SFT-1; 1–0 REINFORCE</td><td>Reproduce the off-policy/on-policy contrast.</td></tr>
+            <tr><td>Update parameterization</td><td>Full fine-tuning; LoRA rank 8</td><td>Test whether constrained update geometry changes forgetting at comparable learning.</td></tr>
+            </tbody></table></div>
+            <p>For the MLP pilot, apply LoRA to all three linear layers, freeze their pretrained weights and biases, set <span class="math-inline">$r=8$</span>, <span class="math-inline">$\alpha=8$</span>, and dropout to zero. The <span class="math-inline">$\alpha/r=1$</span> scaling and zero-initialized LoRA output make the initial deployed function exactly equal to <span class="math-inline">$\theta_0$</span>. Sweep learning rates separately for full fine-tuning and LoRA; using one shared “best” learning rate would confound update geometry with avoidable under-training. SFT-2, oracle SFT, GRPO, and GRPO-KL are robustness cells after the four-cell core is verified.</p>
+            <p>Week 1 records task-B accuracy and KL, task-A forgetting and label code length, effective-weight distance, CKA, and both fixed and fresh task-A linear probes. Because the label set is only ten familiar classes, its code length is a behavioral confidence diagnostic, not a writable-capacity estimate. Phase 0 does not support a bits-per-parameter claim.</p>
+            <p><strong>Gate P0.</strong> Continue only if (i) the SFT/on-policy learning–forgetting separation is qualitatively reproduced, (ii) the fitted KL–forgetting relationship is stable across seeds, and (iii) full and rank-8 runs have common support in task-B performance and KL. The target is not mechanically <span class="math-inline">$R^2=0.96$</span>; confidence intervals and failure analysis are reported. If condition (iii) fails, the LoRA learning-rate/step grid is expanded before any rank comparison is interpreted.</p>
+            <p>ParityMNIST is a replication harness, not the main bits experiment. Its ten-label output space and familiar labels do not create enough controlled information load to adjudicate capacity displacement.</p>
+            <h3 id="5-2-phase-1-paired-information-load-experiment">5.2 Phase 1: paired information-load experiment</h3>
+            <p>Use a small decoder model whose task-B update is either full fine-tuning or all-linear-layer LoRA. Rank 8 versus full is the primary parameterization contrast inherited from Phase 0; additional ranks and placements are ablations, not separate headline experiments. This makes writable capacity calibratable while retaining a direct high-rank comparison.</p>
+            <h4 id="checkpoints-and-tasks">Checkpoints and tasks</h4>
+            <ol>
+            <li>Start with <span class="math-inline">$\theta_{\text{pre-A}}$</span>, which has never seen synthetic task A.</li>
+            <li>Teach task A, a set of synthetic key–value facts, producing base checkpoint <span class="math-inline">$\theta_0$</span>.</li>
+            <li>Fine-tune <span class="math-inline">$\theta_0$</span> on task B to obtain <span class="math-inline">$\theta_B$</span>.</li>
+            <li>In parallel, apply the same task-B procedure to <span class="math-inline">$\theta_{\text{pre-A}}$</span> to obtain a matched <strong>never-knew-A control</strong>.</li>
+            </ol>
+            <p>The never-knew control is essential. Fast relearning from <span class="math-inline">$\theta_B$</span> is evidence of retained information only if it is faster than learning A from a model with the same B-training history that never knew A.</p>
+            <h4 id="randomized-information-load-manipulation">Randomized information-load manipulation</h4>
+            <p>Build a base-derived set of prompts and target strings. Randomly permute a preregistered fraction <span class="math-inline">$\lambda\in\{0,.25,.5,1\}$</span> of target assignments across prompts. This preserves:</p>
+            <ul>
+            <li>the prompt set;</li>
+            <li>the exact target strings;</li>
+            <li>target length and token-frequency marginals;</li>
+            <li>model architecture, optimizer, and loss;</li>
+            <li>dataset size and number of exposures.</li>
+            </ul>
+            <p>This manipulation does <strong>not</strong> change only novelty. When a prompt already elicits probability mass on its original value, permutation also creates conflict with a base prior: the model must suppress an existing association while learning the reassigned one. Initial loss and base target probabilities measure this conflict but do not remove it.</p>
+            <p>Add a paired <strong>fresh-key cell</strong> to isolate novel information without override. Generate synthetic keys outside the task-A and base-derived key templates, pair them with the same target-string multiset, and filter or stratify them so <span class="math-inline">$heta_0$</span> has no systematic preference among candidate target assignments. Match target lengths, token marginals, dataset size, exposures, and optimization exactly to the permuted-key cell. The contrast is then:</p>
+            <ul>
+            <li>fresh key + novel value: novelty with minimal measured conflict;</li>
+            <li>familiar key + permuted value: novelty plus override pressure.</li>
+            </ul>
+            <p>Fully random token strings remain a capacity-calibration condition, not the sole novelty treatment, because natural versus random strings would otherwise confound information load with surface form and initial likelihood.</p>
+            <p>Add a deterministic formatting cell as a low-information positive-learning control. Measure initial loss and gradient statistics in every cell rather than assuming the construction matches difficulty perfectly.</p>
+            <h4 id="capacity-pressure">Capacity pressure</h4>
+            <p>For each update parameterization, and for every LoRA placement/rank ablation, estimate writable capacity using the random-string protocol of Morris et al. and Tan et al. Define</p>
+            <div class="math-display">$$\rho = \frac{\text{entropy of novel task-B associations}}{\text{measured writable capacity at the declared training budget}}.$$</div>
+            <p>Run at several <span class="math-inline">$\rho$</span> bands below and around one. Capacity claims require this axis: writing novel facts into a largely empty parameterization does not imply that old facts must be displaced.</p>
+            <h4 id="creating-overlap">Creating overlap</h4>
+            <p>Sweep learning rate and training steps independently within every <span class="math-inline">$(\lambda,\rho,\text{parameterization},\text{conflict condition})$</span> cell. Retain a common-support region in which cells overlap on:</p>
+            <ul>
+            <li>new-task performance;</li>
+            <li>new-task forward KL;</li>
+            <li>immediate old-task forgetting.</li>
+            </ul>
+            <p>Matched comparisons are made only inside this overlap. Extreme runs remain useful for curve fitting but do not support the matched causal claim.</p>
+            <h3 id="5-3-secondary-algorithm-comparison">5.3 Secondary algorithm comparison</h3>
+            <p>Compare SFT, 1–0 REINFORCE, and GRPO only on task-B variants whose correct outputs have adequate support under <span class="math-inline">$\theta_0$</span>. This tests whether algorithm adds recovery signal after conditioning on final-policy measurements.</p>
+            <p>Do not use an RL agent's failure to learn an unguessable random code as evidence that RL “writes no bits.” In that condition the reward supplies no useful gradient until the code is sampled, so task performance is not matched.</p>
+            <h3 id="5-4-measurements-at-every-checkpoint">5.4 Measurements at every checkpoint</h3>
+            <p>Measure before any recovery intervention:</p>
+            <div class="table-wrap"><table><thead><tr><th>Construct</th><th>Primary measure</th><th>Notes</th></tr></thead><tbody>
+            <tr><td>New-task distribution shift</td><td><span class="math-inline">$D_{\mathrm{KL}}(\pi_0\|\pi_B)$</span> on fixed task-B prompts</td><td>Match Shenfeld et al.; also report reverse KL.</td></tr>
+            <tr><td>Immediate forgetting</td><td>Task-A performance drop from <span class="math-inline">$\theta_0$</span> to <span class="math-inline">$\theta_B$</span></td><td>Condition on this when asking about recovery.</td></tr>
+            <tr><td>New information acquired</td><td><span class="math-inline">$B_{\text{new}}$</span>: training-specific compression advantage on B</td><td>Ground-truth interpretation is strongest for permuted/random associations.</td></tr>
+            <tr><td>Base-association conflict</td><td>Initial target loss and base probability margin between assigned and original values</td><td>Separates fresh-key novelty from familiar-key override pressure; it is a measured covariate, not a substitute for the randomized fresh-key cell.</td></tr>
+            <tr><td>Old behavioral information lost</td><td><span class="math-inline">$L_{\text{old}}$</span>: code-length increase on canonical and paraphrased A targets</td><td>Report canonical, max-over-paraphrases, and content-token-only variants.</td></tr>
+            <tr><td>Old information decodability</td><td>Fixed and fresh linear probes on frozen A representations</td><td>The fixed <span class="math-inline">$\theta_0$</span> probe tests coordinate/readout stability; a fresh checkpoint-specific probe tests linear decodability. Both require A labels and are scientific diagnostics, not deployable no-A signals.</td></tr>
+            <tr><td>Representation change</td><td>Layerwise CKA/CKNNA on A, B, and neutral prompts</td><td>Geometry is a candidate predictor, not proof of content.</td></tr>
+            <tr><td>Update geometry</td><td>Effective-update rank/singular spectrum and principal angles between A/B gradient subspaces</td><td>LoRA's declared rank is a constraint; the realized spectrum and task overlap are measured rather than inferred.</td></tr>
+            <tr><td>Local geometry</td><td>Normalized perturbed-loss gap plus a Hessian trace/eigenvalue estimate</td><td>Predeclare normalization because raw sharpness is parameterization-sensitive.</td></tr>
+            <tr><td>Update baselines</td><td>L2, Fisher-weighted L2, cosine update alignment</td><td>Included to connect to the published predictor ablation.</td></tr>
+            </tbody></table></div>
+            <h3 id="5-5-recovery-protocol-and-outcome">5.5 Recovery protocol and outcome</h3>
+            <p>“Irreversible” is not an observable finite-budget property. The proposal therefore uses <strong>budget-resistant</strong> and defines recovery relative to explicit compute and data.</p>
+            <p>Each terminal checkpoint receives three recovery arms:</p>
+            <ol>
+            <li><strong>Cue-only recovery:</strong> task-format/alignment examples containing no task-A facts. Success is strong evidence of access loss.</li>
+            <li><strong>Direct relearning:</strong> a stratified subset of task-A examples. This measures sample efficiency but is interpreted only relative to the never-knew-A control.</li>
+            <li><strong>Ceiling recovery:</strong> the largest preregistered A-data and compute budget. This distinguishes slow recovery from an early plateau.</li>
+            </ol>
+            <p>All recovery arms preserve the task-B update and report both A recovery and B retention. For LoRA checkpoints, “disable the B adapter” is logged only as a sanity bound and is excluded from recovery outcomes because it restores A by discarding B.</p>
+            <p>Recovery is counted only while task B remains within a preregistered tolerance of its post-fine-tuning score. For recovery checkpoint <span class="math-inline">$\theta_{A\leftarrow B}(b)$</span> at budget <span class="math-inline">$b$</span>, admissibility requires</p>
+            <div class="math-display">$$S_B\!\left(\theta_{A\leftarrow B}(b)\right)
+            \geq
+            S_B(\theta_B)-\epsilon_B,$$</div>
+            <p>where <span class="math-inline">$\epsilon_B$</span> is set from task-B evaluation noise before recovery and accompanied by a sensitivity analysis. Every recovery metric is computed on this admissible portion of the curve; if the threshold is never reached without violating the B floor, the recovery budget is censored. The full joint <span class="math-inline">$(S_A,S_B)$</span> Pareto frontier is reported so that “recovering A by forgetting B back” cannot count as successful recovery.</p>
+            <p>For each arm, evaluate a budget ladder in examples, tokens, and optimizer steps. Use the best result from a small preregistered recovery-learning-rate grid so that a checkpoint is not labeled resistant merely because one learning rate was unsuitable.</p>
+            <p>Primary recovery outcomes are:</p>
+            <ul>
+            <li><strong>B-constrained recovery AULC:</strong> area under the admissible task-A recovery curve on a log-budget axis;</li>
+            <li><strong>B-constrained recovery advantage:</strong> admissible AULC from <span class="math-inline">$\theta_B$</span> minus admissible AULC from the matched never-knew-A control;</li>
+            <li><strong>Joint recovery frontier:</strong> the Pareto frontier of task-A restoration and task-B retention over budgets and recovery learning rates;</li>
+            <li><strong>Recovery ceiling:</strong> best admissible task-A score within the maximum budget;</li>
+            <li><strong><span class="math-inline">$C_{90}$</span>:</strong> minimum admissible budget restoring 90% of the lost score, reported as a secondary, censored outcome with 80% and 95% sensitivity analyses.</li>
+            </ul>
+            <p>Recovery advantage, not raw recovery speed, is the closest operational measure of retained task-A information.</p>
+            <h3 id="5-6-rank-and-geometry-ablations">5.6 Rank and geometry ablations</h3>
+            <p>The main full-versus-rank-8 comparison changes both the dimension and the factorized shape of the trainable update. It is the practical estimator comparison, not a pure causal estimate of rank alone. Use the following staged ablations to identify what drives any difference:</p>
+            <div class="table-wrap"><table><thead><tr><th>Ablation</th><th>Comparison</th><th>Question isolated</th></tr></thead><tbody>
+            <tr><td>Primary</td><td>Full fine-tuning vs all-linear LoRA <span class="math-inline">$r=8$</span></td><td>Does the deployed update parameterization change recovery at matched endpoints?</td></tr>
+            <tr><td>Rank</td><td>LoRA <span class="math-inline">$r\in\{2,8,32\}$</span></td><td>Is any effect monotonic or thresholded in rank? Run only after the primary contrast.</td></tr>
+            <tr><td>Placement</td><td>All linear layers vs MLP-only vs attention-only</td><td>Is writable capacity/forgetting driven by where updates are allowed? Transformer phase only.</td></tr>
+            <tr><td>Parameter budget</td><td>LoRA vs a matched-dimensional random update subspace</td><td>Is the effect specific to factorized low rank or mostly trainable dimension?</td></tr>
+            <tr><td>Learning control</td><td>Independently tuned learning-rate/step grids; matched task-B performance</td><td>Does “LoRA forgets less” survive equal learning rather than reflect underfitting?</td></tr>
+            <tr><td>Geometry</td><td>High- vs low-A/B gradient-subspace-angle task pairs</td><td>Does rank stop mattering for forgetting—and for what comes back—when task angles are high?</td></tr>
+            <tr><td>Temporal dissociation</td><td>Dense early task-B checkpoints</td><td>Does task-A damage appear before old-task code-length loss, as an access-loss account predicts?</td></tr>
+            <tr><td>Bias/scaling</td><td>Frozen vs trainable bias; fixed <span class="math-inline">$\alpha/r$</span></td><td>Are implementation details masquerading as rank effects?</td></tr>
+            </tbody></table></div>
+            <p>These ablations are ordered to control scope. Week 1 runs only the primary full-versus-<span class="math-inline">$r=8$</span> comparison, with all linear layers targeted and separate learning-rate sweeps. Phase 1 adds <span class="math-inline">$r\in\{2,8,32\}$</span> if the primary contrast has common support and a detectable effect. Placement and matched-dimensional random-subspace controls are LLM-stage mechanism checks.</p>
+            <p>The <strong>temporal dissociation</strong> is a secondary, step-resolved analysis that can be completed before the recovery arms. Log task-A performance, old-task code length, fixed/fresh probes, and new-task KL at logarithmically spaced early B-training steps in addition to the existing fractional checkpoints. Spurious-forgetting theory predicts a sharp early task-A drop while old-task code-length loss remains small; a rewrite account predicts behavioral damage and code-length loss moving together. A clean lag is strong evidence for early access disruption, although later content loss may still accumulate. This analysis requires extra checkpoint evaluation but no recovery training.</p>
+            <h3 id="5-7-analysis-plan">5.7 Analysis plan</h3>
+            <p>Separate prediction from causal inference.</p>
+            <h4 id="predictive-analysis">Predictive analysis</h4>
+            <p>Fit the following nested predictors of recovery AULC:</p>
+            <ol>
+            <li>immediate forgetting only;</li>
+            <li>immediate forgetting + new-task KL;</li>
+            <li>baseline + <span class="math-inline">$B_{\text{new}}$</span> and <span class="math-inline">$L_{\text{old}}$</span>;</li>
+            <li>baseline + fixed/fresh probe gap and representation measures;</li>
+            <li>baseline + parameterization, realized update spectrum, task-subspace angle, and sharpness;</li>
+            <li>all preregistered predictors.</li>
+            </ol>
+            <p>Compare grouped out-of-sample <span class="math-inline">$R^2$</span>, rank correlation, and calibration. Hold out entire task templates and random-mapping seeds; later hold out a model scale. Checkpoints from the same training run are never split across train and test folds. Report bootstrap confidence intervals and the incremental performance of each predictor family, not only in-sample fits.</p>
+            <h4 id="causal-analysis">Causal analysis</h4>
+            <p>Estimate the randomized effects of <span class="math-inline">$\lambda$</span>, <span class="math-inline">$\rho$</span>, conflict condition, parameterization, and their preregistered interactions within the common-support region, controlling for task performance, KL, and immediate forgetting. The fresh-key versus familiar-permuted contrast identifies override pressure beyond novelty. The information-load × capacity-pressure interaction is the confirmatory capacity test. The rank-8/full coefficient and parameterization × task-subspace-angle interaction test whether update geometry adds information beyond the behavioral endpoint. A preregistered high-angle equivalence test asks whether recovery differences across LoRA ranks fall inside a practical-equivalence band. Mediation through measured <span class="math-inline">$B_{\text{new}}$</span>, <span class="math-inline">$L_{\text{old}}$</span>, or probes is exploratory because those quantities are post-treatment variables.</p>
+            <h4 id="falsification-checks">Falsification checks</h4>
+            <ul>
+            <li>Held-out random associations must have near-zero training-specific compression advantage.</li>
+            <li>Fresh keys must show no systematic base preference among candidate values; otherwise the zero-conflict interpretation fails and conflict remains a measured covariate only.</li>
+            <li>Surface-form variants must agree in sign; otherwise the code-length instrument is format-dominated.</li>
+            <li>Predictors must transfer to held-out mappings/tasks; checkpoint interpolation alone is insufficient.</li>
+            <li>Results must survive per-run aggregation so dense checkpoint logging does not inflate the effective sample size.</li>
+            <li>Full and LoRA cells must overlap in task-B performance, KL, and immediate forgetting; otherwise the result is a Pareto comparison, not a matched-recovery comparison.</li>
+            </ul>
+            <h3 id="5-8-phase-2-future-work-no-old-data-recovery-triage">5.8 Phase 2 / future work: no-old-data recovery triage</h3>
+            <p>The primary project asks whether checkpoint signals predict recovery under a standardized protocol. A natural second-stage question is more decision-oriented:</p>
+            <blockquote><strong>Can signals measured without old-task examples or additional model training predict whether a checkpoint is recoverable, which recovery treatment to use, and the approximate data/compute budget required?</strong></blockquote>
+            <p>This is possible as a learned meta-prediction problem, with an important information boundary. At deployment, the system must know which capability is being discussed through a task identifier or coarse metadata, and it may use the base checkpoint, fine-tuned checkpoint, task-B data/statistics, and training logs. It does not receive task-A examples or labels. Without even a task identity or target definition, “recover this capability” is ill-posed. Without task-A evaluation data, the system can recommend an intervention but cannot certify afterward that 90% recovery was actually achieved.</p>
+            <p>The training of the triage predictor is also separate from its deployment. During research, we create supervision by running recovery experiments on many checkpoints. At deployment, applying the fitted predictor requires no model fine-tuning and no task-A data.</p>
+            <h4 id="recovery-treatments">Recovery treatments</h4>
+            <p>For every research checkpoint, estimate a recovery curve for each treatment <span class="math-inline">$t$</span> over data/compute budget <span class="math-inline">$b$</span>:</p>
+            <div class="math-display">$$R_t(b\mid\theta).$$</div>
+            <div class="table-wrap"><table><thead><tr><th>Treatment</th><th>Contains task-A facts?</th><th>What it tests</th></tr></thead><tbody>
+            <tr><td>Cue/format examples</td><td>No</td><td>Can task alignment be restored without reintroducing content?</td></tr>
+            <tr><td>Domain-related examples</td><td>No</td><td>Can related behavior reactivate the capability?</td></tr>
+            <tr><td>Direct task-A examples</td><td>Yes</td><td>How efficiently can task-specific content be recovered?</td></tr>
+            <tr><td>Full replay</td><td>Yes</td><td>What recovery ceiling is reachable within the declared compute budget?</td></tr>
+            </tbody></table></div>
+            <p>The treatment menu must be defined in advance. The predictor can choose among known intervention classes; it cannot infer or invent unavailable task-A facts from checkpoint statistics alone.</p>
+            <h4 id="two-predictor-versions">Two predictor versions</h4>
+            <p>The <strong>deployable predictor</strong> uses only signals available without task-A examples or labels:</p>
+            <ul>
+            <li>forward/reverse KL on task B;</li>
+            <li>task-B performance, training dynamics, and task metadata;</li>
+            <li>weight-update and optimizer statistics;</li>
+            <li>update parameterization, declared rank, effective update spectrum, and task-B/neutral-data subspace statistics;</li>
+            <li>sharpness measured on B;</li>
+            <li>representation drift on neutral data and model-architecture metadata.</li>
+            </ul>
+            <p>The <strong>scientific upper-bound predictor</strong> additionally receives immediate A forgetting, old-task code-length loss, and A-label probes. It is not a deployable product. Its role is to quantify how much predictive power is lost when old-task access is forbidden and to test whether bits/probes explain failures of the deployable signals.</p>
+            <h4 id="decision-rule">Decision rule</h4>
+            <p>The fitted model predicts the recovery response surfaces <span class="math-inline">$\widehat{R}_t(b\mid\theta)$</span> and their uncertainty, then recommends</p>
+            <div class="math-display">$$(t^*,b^*)
+            =
+            \arg\min_{t,b}\operatorname{Cost}(t,b)$$</div>
+            <p>subject to</p>
+            <div class="math-display">$$P\!\left(R_t(b)\geq 90\%\text{ recovery}\right)\geq0.9.$$</div>
+            <p>The output should be a calibrated range and fallback policy, not false precision. For example:</p>
+            <blockquote>“Estimated access loss probability: 0.87. Try 32–64 cue-only examples. If that fails, use 200–300 direct task examples. Abstain and run an explicit recovery audit if neither budget is available.”</blockquote>
+            <p>Evaluate this policy by holding out entire task families and model scales, measuring coverage of its budget intervals, treatment-selection regret relative to the empirically cheapest successful treatment, and abstention quality under distribution shift.</p>
+            <h4 id="scope-decision">Scope decision</h4>
+            <p>Predicting <span class="math-inline">$C_{90}$</span> for one fixed direct-relearning protocol is already part of the primary contribution. Predicting the cheapest treatment among cue-only, domain-related, direct replay, and full replay multiplies the recovery matrix and requires substantially more task diversity. It is therefore Phase 2: begin only if Phase 1 predicts recovery on held-out task templates rather than merely interpolating checkpoints from familiar runs.</p>
+            <h2 id="6-what-each-possible-result-would-mean">6. What each possible result would mean</h2>
+            <div class="table-wrap"><table><thead><tr><th>Result</th><th>Supported conclusion</th><th>Conclusion not licensed</th></tr></thead><tbody>
+            <tr><td>KL predicts held-out recovery and other measures add no stable signal</td><td>KL is an adequate operational predictor of recovery in the tested regimes.</td><td>KL is the universal mechanism of forgetting.</td></tr>
+            <tr><td>Information load × capacity pressure changes recovery at matched KL/damage</td><td>Capacity-constrained deposition contributes to budget-resistant forgetting.</td><td>Every lost capability was physically overwritten.</td></tr>
+            <tr><td>Rank-8 LoRA and full fine-tuning have different recovery at matched learning/KL/damage</td><td>Update parameterization contains recovery-relevant information beyond the measured behavioral endpoint.</td><td>Low rank is inherently “rotation,” full fine-tuning is inherently “overwrite,” or rank caused the effect without the staged ablations.</td></tr>
+            <tr><td>Fixed probe fails while a fresh probe and old-task code length remain strong</td><td>The old readout/coordinate system is disrupted while linearly usable A information remains.</td><td>All of task A is intact, or a probe-free deployed model can access it.</td></tr>
+            <tr><td>Fresh probe, old-task code length, and recovery advantage all collapse</td><td>The checkpoint shows convergent evidence of content-level loss under the declared assays.</td><td>The weights contain literally zero information about A.</td></tr>
+            <tr><td>Cue-only recovery succeeds with little old-task code-length loss</td><td>Access loss explains a meaningful portion of the behavioral drop.</td><td>Internal representations are unchanged.</td></tr>
+            <tr><td>Sharpness generalizes across tasks after all controls</td><td>Local geometry is a useful recovery predictor beyond KL.</td><td>The unlearning mechanism transfers unchanged to all fine-tuning.</td></tr>
+            <tr><td>No recovery variation remains after matching immediate damage</td><td>This testbed cannot distinguish recovery mechanisms.</td><td>Recovery is always determined by KL.</td></tr>
+            </tbody></table></div>
+            <h2 id="7-kill-criteria-and-scope-boundaries">7. Kill criteria and scope boundaries</h2>
+            <ul>
+            <li><strong>K1 — Replication failure:</strong> no stable KL–forgetting relationship in Phase 0. Stop extension claims and diagnose the reproduction.</li>
+            <li><strong>K2 — No common support:</strong> information-load cells do not overlap in KL, new-task performance, and immediate forgetting. Do not report matched causal effects; redesign the task or sweep.</li>
+            <li><strong>K3 — No capacity pressure:</strong> all runs have <span class="math-inline">$\rho\ll1$</span>. No capacity-displacement conclusion is possible.</li>
+            <li><strong>K4 — Instrument failure:</strong> code-length results reverse across canonical/paraphrased/content-token scoring. Drop the bits predictor as a content measure; retain the randomized treatment and other predictors.</li>
+            <li><strong>K5 — Recovery-protocol failure:</strong> known-A and never-knew-A controls have indistinguishable recovery even before B. The recovery assay lacks power and must be repaired.</li>
+            <li><strong>K6 — Parameterization support failure:</strong> full and rank-8 cells cannot be matched on task-B learning, KL, and immediate forgetting after expanding their learning-rate/step grids. Report separate Pareto frontiers; do not claim that rank changes recoverability at an equal endpoint.</li>
+            </ul>
+            <p>The toy experiments can establish identifiability and measurement behavior. Any claim about foundation-model post-training requires a reduced-density LLM replication. Any claim about unlearning remains a transfer hypothesis until tested on unlearning objectives.</p>
+            <h2 id="8-contributions">8. Contributions</h2>
+            <p>If completed, the project contributes:</p>
+            <ol>
+            <li><strong>A recovery extension of the KL forgetting law:</strong> the first direct test of whether new-task KL predicts recovery after ordinary fine-tuning.</li>
+            <li><strong>A controlled information-load intervention:</strong> output marginals are preserved while prompt–target novelty is randomized, separating information source from obvious surface-form differences.</li>
+            <li><strong>A recovery assay with a never-knew baseline:</strong> rapid relearning is credited to retained information only when it beats an appropriately matched control.</li>
+            <li><strong>A head-to-head predictor benchmark:</strong> KL, behavioral code length, representation drift, sharpness, and weight metrics compete under grouped held-out evaluation.</li>
+            <li><strong>A parameterization-aware recovery test:</strong> full fine-tuning and rank-8 LoRA are compared from Week 1, then separated from learning level, rank, placement, and task-subspace overlap through staged ablations.</li>
+            <li><strong>A bridge with explicit limits:</strong> unlearning contributes recovery protocols and candidate diagnostics; ordinary fine-tuning supplies the target domain; neither literature is treated as proof for the other.</li>
+            </ol>
+            <h2 id="9-execution-plan">9. Execution plan</h2>
+            <div class="table-wrap"><table><thead><tr><th>Time</th><th>Work</th><th>Decision gate</th></tr></thead><tbody>
+            <tr><td>Week 1</td><td>Run the four-cell objective × parameterization pilot: SFT-1 and 1–0 REINFORCE, each with full fine-tuning and all-layer LoRA <span class="math-inline">$r=8$</span>; verify exact zero-step equivalence, trainable-parameter accounting, effective-weight metrics, bits, CKA, fixed/fresh probes, and logarithmic early-step logging.</td><td>P0 harness and LoRA correctness</td></tr>
+            <tr><td>Weeks 2–3</td><td>Full Phase-0 sweep with independently tuned full/LoRA grids and at least three seeds; estimate common support and preregister the recovery protocol.</td><td>K1, K6</td></tr>
+            <tr><td>Weeks 4–5</td><td>Build paired A/B synthetic task, never-knew control, and random-association calibration.</td><td>K5</td></tr>
+            <tr><td>Weeks 6–7</td><td>Information-load × capacity-pressure sweep and recovery arms.</td><td>K2–K4</td></tr>
+            <tr><td>Weeks 8–9</td><td>Grouped predictive analysis, ablations, and held-out-task validation.</td><td>Toy-stage claim</td></tr>
+            <tr><td>Thereafter</td><td>Reduced-density LLM validation and, separately, unlearning transfer.</td><td>External validity</td></tr>
+            <tr><td>Phase 2 / future</td><td>Fit and validate the no-old-data treatment-and-budget triage policy across held-out task families.</td><td>Deployable decision support</td></tr>
+            </tbody></table></div>
+            <h2 id="references">References</h2>
+            <ul>
+            <li>Aghajanyan, A., Gupta, S., &amp; Zettlemoyer, L. (2021). <a href="https://arxiv.org/abs/2012.13255" target="_blank" rel="noopener noreferrer"><em>Intrinsic Dimensionality Explains the Effectiveness of Language Model Fine-Tuning</em></a>.</li>
+            <li>Besiroglu, T., et al. (2024). <a href="https://arxiv.org/abs/2404.10102" target="_blank" rel="noopener noreferrer"><em>Chinchilla Scaling: A Replication Attempt</em></a>.</li>
+            <li>Biderman, D., et al. (2024). <a href="https://arxiv.org/abs/2405.09673" target="_blank" rel="noopener noreferrer"><em>LoRA Learns Less and Forgets Less</em></a>.</li>
+            <li>Davari, M., et al. (2022). <a href="https://openaccess.thecvf.com/content/CVPR2022/html/Davari_Probing_Representation_Forgetting_in_Supervised_and_Unsupervised_Continual_Learning_CVPR_2022_paper.html" target="_blank" rel="noopener noreferrer"><em>Probing Representation Forgetting in Supervised and Unsupervised Continual Learning</em></a>. CVPR 2022.</li>
+            <li>Fan, C., et al. (2025). <a href="https://arxiv.org/abs/2502.05374" target="_blank" rel="noopener noreferrer"><em>Towards LLM Unlearning Resilient to Relearning Attacks: A Sharpness-Aware Minimization Perspective and Beyond</em></a>.</li>
+            <li>Hoffmann, J., et al. (2022). <a href="https://arxiv.org/abs/2203.15556" target="_blank" rel="noopener noreferrer"><em>Training Compute-Optimal Large Language Models</em></a>.</li>
+            <li>Hu, E. J., et al. (2021). <a href="https://arxiv.org/abs/2106.09685" target="_blank" rel="noopener noreferrer"><em>LoRA: Low-Rank Adaptation of Large Language Models</em></a>.</li>
+            <li>Huang, A., et al. (2025). <a href="https://arxiv.org/abs/2412.01951" target="_blank" rel="noopener noreferrer"><em>Self-Improvement in Language Models: The Sharpening Mechanism</em></a>. ICLR 2025.</li>
+            <li>Jin, H., et al. (2026). <a href="https://arxiv.org/abs/2605.10973" target="_blank" rel="noopener noreferrer"><em>Rotation-Preserving Supervised Fine-Tuning</em></a>. Preprint.</li>
+            <li>Kaplan, J., et al. (2020). <a href="https://arxiv.org/abs/2001.08361" target="_blank" rel="noopener noreferrer"><em>Scaling Laws for Neural Language Models</em></a>.</li>
+            <li>Kirkpatrick, J., et al. (2017). <a href="https://doi.org/10.1073/pnas.1611835114" target="_blank" rel="noopener noreferrer"><em>Overcoming Catastrophic Forgetting in Neural Networks</em></a>. PNAS.</li>
+            <li>McCloskey, M., &amp; Cohen, N. J. (1989). <a href="https://doi.org/10.1016/S0079-7421(08" target="_blank" rel="noopener noreferrer"><em>Catastrophic Interference in Connectionist Networks: The Sequential Learning Problem</em></a>60536-8).</li>
+            <li>Morris, J. X., et al. (2025). <a href="https://arxiv.org/abs/2505.24832" target="_blank" rel="noopener noreferrer"><em>How Much Do Language Models Memorize?</em></a>.</li>
+            <li>OpenUnlearning / Dorna, V., et al. (2025). <a href="https://arxiv.org/abs/2506.12618" target="_blank" rel="noopener noreferrer"><em>Accelerating LLM Unlearning via Unified Benchmarking of Methods and Metrics</em></a>.</li>
+            <li>Porian, T., et al. (2024). <a href="https://arxiv.org/abs/2406.19146" target="_blank" rel="noopener noreferrer"><em>Resolving Discrepancies in Compute-Optimal Scaling of Language Models</em></a>. NeurIPS 2024.</li>
+            <li>Rybak, P., et al. (2026). <a href="https://arxiv.org/abs/2602.06248" target="_blank" rel="noopener noreferrer"><em>REBEL: Hidden Knowledge Recovery via Evolutionary-Based Evaluation Loop</em></a>.</li>
+            <li>Shenfeld, I., Pari, J., &amp; Agrawal, P. (2025). <a href="https://arxiv.org/abs/2509.04259" target="_blank" rel="noopener noreferrer"><em>RL's Razor: Why Online Reinforcement Learning Forgets Less</em></a>.</li>
+            <li>Steele, B. (2026). <a href="https://arxiv.org/abs/2603.02224" target="_blank" rel="noopener noreferrer"><em>Subspace Geometry Governs Catastrophic Forgetting in Low-Rank Adaptation</em></a>. Preprint.</li>
+            <li>Tan, K., Du, H., &amp; Feng, Y. (2026). <a href="https://arxiv.org/abs/2607.21351" target="_blank" rel="noopener noreferrer"><em>How Many Bits Can an Adapter Write? Measuring the Capacity and Memorization of Parameter-Efficient Fine-Tuning</em></a>.</li>
+            <li>Xu, X., et al. (2025). <a href="https://arxiv.org/abs/2505.16831" target="_blank" rel="noopener noreferrer"><em>Unlearning Isn't Deletion: Investigating Reversibility of Machine Unlearning in LLMs</em></a>.</li>
+            <li>Zheng, J., Cai, X., Qiu, S., &amp; Ma, Q. (2025). <a href="https://arxiv.org/abs/2501.13453" target="_blank" rel="noopener noreferrer"><em>Spurious Forgetting in Continual Learning of Language Models</em></a>. ICLR 2025.</li>
+            </ul>
+        </article>
+    </main>
+</body>
+</html>
