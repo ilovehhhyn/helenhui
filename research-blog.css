@@ -3,8 +3,8 @@ html {
 }
 
 body {
-    background: #000000;
-    color: #ffffff;
+    background: #ffffff;
+    color: #000000;
     font-family: Arial, sans-serif;
     margin: 0;
     min-height: 100vh;
@@ -15,9 +15,9 @@ body {
     top: 20px;
     left: 22px;
     z-index: 10;
-    color: #ffffff;
+    color: #000000;
     text-decoration: none;
-    font-size: 1.25rem;
+    font-size: calc(1.25rem + 2px);
     line-height: 1;
     opacity: 0.72;
     padding: 8px 12px;
@@ -37,7 +37,7 @@ body {
 }
 
 .research-article {
-    font-size: 11pt;
+    font-size: calc(11pt + 2px);
     line-height: 1.65;
 }
 
@@ -45,29 +45,29 @@ body {
 .research-article h2,
 .research-article h3,
 .research-article h4 {
-    color: #ffffff;
+    color: #000000;
     font-weight: 700;
     line-height: 1.25;
     scroll-margin-top: 24px;
 }
 
 .research-article h1 {
-    font-size: clamp(1.9rem, 6vw, 2.7rem);
+    font-size: clamp(calc(1.9rem + 2px), calc(6vw + 2px), calc(2.7rem + 2px));
     margin: 0 0 32px;
 }
 
 .research-article h2 {
-    font-size: clamp(1.35rem, 4vw, 1.75rem);
+    font-size: clamp(calc(1.35rem + 2px), calc(4vw + 2px), calc(1.75rem + 2px));
     margin: 56px 0 20px;
 }
 
 .research-article h3 {
-    font-size: 1.15rem;
+    font-size: calc(1.15rem + 2px);
     margin: 36px 0 16px;
 }
 
 .research-article h4 {
-    font-size: 1rem;
+    font-size: calc(1rem + 2px);
     margin: 30px 0 14px;
 }
 
@@ -76,7 +76,7 @@ body {
 }
 
 .research-article a {
-    color: #8fc8ff;
+    color: #000000;
     text-decoration-thickness: 1px;
     text-underline-offset: 0.16em;
     overflow-wrap: anywhere;
@@ -84,7 +84,7 @@ body {
 
 .research-article a:hover,
 .research-article a:focus-visible {
-    color: #c7e5ff;
+    color: #000000;
 }
 
 .research-article ul,
@@ -103,18 +103,18 @@ body {
 }
 
 .research-article blockquote {
-    border-left: 3px solid #8fc8ff;
+    border-left: 3px solid #000000;
     margin: 28px 0;
     padding: 4px 0 4px 18px;
-    color: #dddddd;
+    color: #000000;
 }
 
 .research-article code {
-    background: #171717;
-    border: 1px solid #303030;
+    background: #f5f5f5;
+    border: 1px solid #cccccc;
     border-radius: 4px;
     font-family: "SFMono-Regular", Consolas, monospace;
-    font-size: 0.9em;
+    font-size: calc(0.9em + 0.2px);
     padding: 0.1em 0.3em;
 }
 
@@ -127,19 +127,19 @@ body {
 .research-article table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.92em;
+    font-size: calc(0.92em + 0.16px);
 }
 
 .research-article th,
 .research-article td {
-    border: 1px solid #444444;
+    border: 1px solid #b3b3b3;
     padding: 10px 12px;
     text-align: left;
     vertical-align: top;
 }
 
 .research-article th {
-    background: #171717;
+    background: #f5f5f5;
     font-weight: 700;
 }
 
@@ -156,7 +156,7 @@ body {
 }
 
 mjx-container {
-    color: #ffffff;
+    color: #000000;
 }
 
 @media (max-width: 600px) {
@@ -166,7 +166,7 @@ mjx-container {
     }
 
     .research-article {
-        font-size: 10.5pt;
+        font-size: calc(10.5pt + 2px);
         line-height: 1.58;
     }
 
