@@ -110,8 +110,8 @@ body {
 }
 
 .research-article code {
-    background: #f5f5f5;
-    border: 1px solid #cccccc;
+    background: #ffffff;
+    border: 1px solid #000000;
     border-radius: 4px;
     font-family: "SFMono-Regular", Consolas, monospace;
     font-size: calc(0.9em + 0.2px);
@@ -132,14 +132,14 @@ body {
 
 .research-article th,
 .research-article td {
-    border: 1px solid #b3b3b3;
+    border: 1px solid #000000;
     padding: 10px 12px;
     text-align: left;
     vertical-align: top;
 }
 
 .research-article th {
-    background: #f5f5f5;
+    background: #ffffff;
     font-weight: 700;
 }
 
