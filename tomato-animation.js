@@ -4,8 +4,10 @@
     var tomato = document.querySelector(".tomato-animation");
     var tomatoArt = tomato && tomato.querySelector(".tomato-art");
     var target = document.getElementById("tomato-tree-target");
+    var hero = document.querySelector(".hero");
+    var hasRun = false;
 
-    if (!tomato || !tomatoArt || !target) {
+    if (!tomato || !tomatoArt || !target || !hero) {
         return;
     }
 
@@ -14,12 +16,13 @@
     }
 
     function runTomatoAnimation() {
-        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        if (hasRun || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
             return;
         }
 
         var tomatoRect = tomato.getBoundingClientRect();
         var targetRect = target.getBoundingClientRect();
+        var heroRect = hero.getBoundingClientRect();
         var tomatoWidth = tomatoRect.width;
         var tomatoHeight = tomatoRect.height;
 
@@ -27,12 +30,14 @@
             return;
         }
 
+        hasRun = true;
+
         // land with the center of mass right over the corner of "tree":
         // an unstable equilibrium, so it settles into a rock, not a rest
-        var landingX = targetRect.right - tomatoWidth * 0.5;
-        var landingY = targetRect.top - tomatoHeight + 4;
+        var landingX = targetRect.right - heroRect.left - tomatoWidth * 0.5;
+        var landingY = targetRect.top - heroRect.top - tomatoHeight + 4;
         var startY = -tomatoHeight - 20;
-        var exitY = window.innerHeight + tomatoHeight + 30;
+        var exitY = heroRect.height + tomatoHeight + 30;
         var baseTilt = -2;
         var leanShift = 0.3; // px of x shift per degree of lean while rocking
 
@@ -102,6 +107,26 @@
         var toppleEnd = wobbleEnd + toppleDuration;
         var animationEnd = toppleEnd + fallDuration;
         var startedAt = null;
+        var animationFrameId = null;
+        var stopped = false;
+
+        function stopAnimation() {
+            if (stopped) {
+                return;
+            }
+            stopped = true;
+            tomato.style.opacity = "0";
+            if (animationFrameId !== null) {
+                window.cancelAnimationFrame(animationFrameId);
+            }
+            window.removeEventListener("scroll", stopWhenLandingLeavesView);
+        }
+
+        function stopWhenLandingLeavesView() {
+            if (target.getBoundingClientRect().bottom <= 0) {
+                stopAnimation();
+            }
+        }
 
         function toppleAngleAt(time) {
             var index = time / toppleStep;
@@ -121,6 +146,10 @@
         }
 
         function animateFrame(timestamp) {
+            if (stopped) {
+                return;
+            }
+
             if (startedAt === null) {
                 startedAt = timestamp;
             }
@@ -178,13 +207,14 @@
             renderTomato(x, y, rotation, scaleX, scaleY);
 
             if (elapsed < animationEnd) {
-                window.requestAnimationFrame(animateFrame);
+                animationFrameId = window.requestAnimationFrame(animateFrame);
             } else {
-                tomato.style.opacity = "0";
+                stopAnimation();
             }
         }
 
-        window.requestAnimationFrame(animateFrame);
+        window.addEventListener("scroll", stopWhenLandingLeavesView, { passive: true });
+        animationFrameId = window.requestAnimationFrame(animateFrame);
     }
 
     if (document.readyState === "complete") {
