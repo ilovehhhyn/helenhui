@@ -34,7 +34,7 @@
         var startY = -tomatoHeight - 20;
         var exitY = window.innerHeight + tomatoHeight + 30;
         var baseTilt = -2;
-        var leanShift = 0.3; // px of x shift per degree of lean on the corner
+        var leanShift = 0.3; // px of x shift per degree of lean while rocking
 
         // one gravity for every airborne phase
         var gravity = 2200;
@@ -54,30 +54,63 @@
         var bounceDuration = 2 * bounceVelocity / gravity;
         var landingLean = 12; // deg of rightward slant it lands with
 
-        // wobble: three slow swings — right (the landing slant), left,
-        // right — one full rocking cycle, with the amplitude creeping up
-        // so the last rightward swing carries it past the tipping point
-        var wobbleDuration = 1.6;
-        var wobbleAmplitudeEnd = 16;
+        // wobble: right (the landing slant), left, and back up through
+        // vertical — three quarters of a slow rocking cycle. The cut at
+        // 3/4 leaves it upright and swinging rightward, and that momentum
+        // is what the topple below inherits
+        var wobblePeriod = 1.6;
+        var wobbleDuration = 0.75 * wobblePeriod;
 
-        // tip-over: gravity torque about the corner ramps the spin and
-        // horizontal speed up from zero, so the fall starts slow; once
-        // contact is lost there is no torque about the center, so the
-        // rates hold constant while gravity does the speeding up
-        var pivotDuration = 0.22;
-        var fallSpin = 80;  // deg/s after leaving the corner
-        var fallDrift = 90; // px/s of horizontal speed after tipping
-        var fallDuration = Math.sqrt(2 * (exitY - landingY) / gravity);
+        // topple: the third rightward swing never comes back. A body
+        // pivoting on a corner is an inverted pendulum, theta'' = K sin(theta):
+        // torque grows with the lean, so it peels away slowly and then
+        // whips over. The center swings on an arc about the corner until,
+        // nearly sideways, it loses contact with the word and flies off
+        // tangentially. K is kept below g/r so the exit spin stays readable
+        var toppleK = 12;                        // rad/s^2 per sin(lean)
+        var releaseAngle = 78 * Math.PI / 180;   // lean where contact is lost
+        var pivotArm = tomatoWidth / 2;          // corner-to-center distance
+        var toppleOmega0 = (landingLean * Math.PI / 180) * 2 * Math.PI / wobblePeriod;
+        var toppleStep = 1 / 240;
+        var toppleSamples = [0];
+        var toppleTheta = 0;
+        var toppleOmega = toppleOmega0;
+        while (toppleTheta < releaseAngle && toppleSamples.length < 2000) {
+            toppleOmega += toppleK * Math.sin(toppleTheta) * toppleStep;
+            toppleTheta += toppleOmega * toppleStep;
+            toppleSamples.push(toppleTheta);
+        }
+        var toppleDuration = (toppleSamples.length - 1) * toppleStep;
+        var releaseTheta = toppleTheta;
+        var releaseOmega = toppleOmega; // rad/s, constant once airborne
+
+        // free fall from release: the center keeps the tangential velocity
+        // it had about the pivot, gravity curves it down, and with no
+        // contact there is no torque, so the spin rate stays fixed
+        var releaseX = landingX + pivotArm * Math.sin(releaseTheta);
+        var releaseY = landingY + pivotArm * (1 - Math.cos(releaseTheta));
+        var releaseVx = releaseOmega * pivotArm * Math.cos(releaseTheta);
+        var releaseVy = releaseOmega * pivotArm * Math.sin(releaseTheta);
+        var fallDrop = exitY - releaseY;
+        var fallDuration = (Math.sqrt(releaseVy * releaseVy + 2 * gravity * fallDrop) - releaseVy) / gravity;
 
         var dropEnd = dropDuration;
         var squashEnd = dropEnd + squashDuration;
         var bounceEnd = squashEnd + bounceDuration;
         var wobbleEnd = bounceEnd + wobbleDuration;
-        var animationEnd = wobbleEnd + fallDuration;
-
-        var tipAngle = baseTilt + wobbleAmplitudeEnd;
-        var tipX = landingX + wobbleAmplitudeEnd * leanShift;
+        var toppleEnd = wobbleEnd + toppleDuration;
+        var animationEnd = toppleEnd + fallDuration;
         var startedAt = null;
+
+        function toppleAngleAt(time) {
+            var index = time / toppleStep;
+            var low = Math.floor(index);
+            if (low >= toppleSamples.length - 1) {
+                return releaseTheta;
+            }
+            return toppleSamples[low] +
+                (toppleSamples[low + 1] - toppleSamples[low]) * (index - low);
+        }
 
         function renderTomato(x, y, rotation, scaleX, scaleY) {
             tomato.style.opacity = "1";
@@ -123,32 +156,22 @@
                     bounceTime / bounceDuration);
                 x = landingX + (rotation - baseTilt) * leanShift;
             } else if (elapsed >= bounceEnd && elapsed < wobbleEnd) {
-                var wobbleProgress = (elapsed - bounceEnd) / wobbleDuration;
-                // one slow full cycle of cos: starts at the rightward
-                // landing lean, swings left, and returns right — with the
-                // amplitude growing so the last swing goes past tipping
-                var wobbleAmplitude = landingLean +
-                    (wobbleAmplitudeEnd - landingLean) * wobbleProgress;
-                var wobbleAngle = wobbleAmplitude * Math.cos(2 * Math.PI * wobbleProgress);
+                var wobbleTime = elapsed - bounceEnd;
+                var wobbleAngle = landingLean * Math.cos(2 * Math.PI * wobbleTime / wobblePeriod);
                 x = landingX + wobbleAngle * leanShift;
                 y = landingY;
                 rotation = baseTilt + wobbleAngle;
-            } else if (elapsed >= wobbleEnd) {
-                var fallTime = Math.min(elapsed - wobbleEnd, fallDuration);
-                var spin;
-                var drift;
-                if (fallTime < pivotDuration) {
-                    // constant angular acceleration about the corner
-                    spin = 0.5 * (fallSpin / pivotDuration) * fallTime * fallTime;
-                    drift = 0.5 * (fallDrift / pivotDuration) * fallTime * fallTime;
-                } else {
-                    var freeTime = fallTime - pivotDuration;
-                    spin = 0.5 * fallSpin * pivotDuration + fallSpin * freeTime;
-                    drift = 0.5 * fallDrift * pivotDuration + fallDrift * freeTime;
-                }
-                x = tipX + drift;
-                y = landingY + 0.5 * gravity * fallTime * fallTime;
-                rotation = tipAngle + spin;
+            } else if (elapsed >= wobbleEnd && elapsed < toppleEnd) {
+                var leanAngle = toppleAngleAt(elapsed - wobbleEnd);
+                // the center arcs around the corner as it keels over
+                x = landingX + pivotArm * Math.sin(leanAngle);
+                y = landingY + pivotArm * (1 - Math.cos(leanAngle));
+                rotation = baseTilt + leanAngle * (180 / Math.PI);
+            } else if (elapsed >= toppleEnd) {
+                var fallTime = Math.min(elapsed - toppleEnd, fallDuration);
+                x = releaseX + releaseVx * fallTime;
+                y = releaseY + releaseVy * fallTime + 0.5 * gravity * fallTime * fallTime;
+                rotation = baseTilt + (releaseTheta + releaseOmega * fallTime) * (180 / Math.PI);
             }
 
             renderTomato(x, y, rotation, scaleX, scaleY);
