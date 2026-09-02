@@ -28,12 +28,13 @@
         }
 
         // land with the center of mass right over the corner of "tree":
-        // an unstable equilibrium, so the wobble that follows can grow
+        // an unstable equilibrium, so it settles into a rock, not a rest
         var landingX = targetRect.right - tomatoWidth * 0.5;
         var landingY = targetRect.top - tomatoHeight + 4;
         var startY = -tomatoHeight - 20;
         var exitY = window.innerHeight + tomatoHeight + 30;
         var baseTilt = -2;
+        var leanShift = 0.3; // px of x shift per degree of lean on the corner
 
         // one gravity for every airborne phase
         var gravity = 2200;
@@ -42,59 +43,41 @@
         // fall: free fall from rest, y = 1/2 g t^2, stretching with speed
         var dropHeight = landingY - startY;
         var dropDuration = Math.sqrt(2 * dropHeight / gravity);
-        var impactVelocity = gravity * dropDuration;
         var dropStretchMax = 0.06;
-
-        // bounce: coefficient of restitution scales the rebound velocity,
-        // so bounce height = e^2 * drop height under the same gravity
-        var restitution = 0.42;
-        var bounceVelocity = restitution * impactVelocity;
-        var bounceDuration = 2 * bounceVelocity / gravity;
-        var bounceStretchMax = 0.05;
-
         var squashDuration = 0.09;
-        var squash2Duration = 0.07;
 
-        // wobble: perturbation on an unstable pivot grows, so both the
-        // amplitude and the rocking frequency rise until it tips over.
-        // phase is a chirp ending exactly at a peak (3.25 cycles) so the
-        // tip-over continues from the wobble's final angle
-        var wobbleDuration = 1.2;
-        var wobblePhaseTotal = 2 * Math.PI * 3.25;
-        var wobbleChirpPower = 1.8;
-        var wobbleAmplitudeEnd = 20;
-        var wobbleLean = 0.3; // px of x shift per degree of rocking
+        // bounce: a small 5px hop. bouncing off a corner puts the contact
+        // force off-center, so the hop also torques the tomato — it comes
+        // back down already leaning right, straight into the wobble
+        var bounceHeight = 5;
+        var bounceVelocity = Math.sqrt(2 * gravity * bounceHeight);
+        var bounceDuration = 2 * bounceVelocity / gravity;
+        var landingLean = 12; // deg of rightward slant it lands with
+
+        // wobble: three slow swings — right (the landing slant), left,
+        // right — one full rocking cycle, with the amplitude creeping up
+        // so the last rightward swing carries it past the tipping point
+        var wobbleDuration = 1.6;
+        var wobbleAmplitudeEnd = 16;
 
         // tip-over: gravity torque about the corner ramps the spin and
-        // horizontal speed up from zero; once contact is lost there is no
-        // torque about the center, so both rates stay constant
+        // horizontal speed up from zero, so the fall starts slow; once
+        // contact is lost there is no torque about the center, so the
+        // rates hold constant while gravity does the speeding up
         var pivotDuration = 0.22;
-        var fallSpin = 100;  // deg/s after leaving the corner
-        var fallDrift = 90;  // px/s of horizontal speed after tipping
+        var fallSpin = 80;  // deg/s after leaving the corner
+        var fallDrift = 90; // px/s of horizontal speed after tipping
         var fallDuration = Math.sqrt(2 * (exitY - landingY) / gravity);
 
         var dropEnd = dropDuration;
         var squashEnd = dropEnd + squashDuration;
         var bounceEnd = squashEnd + bounceDuration;
-        var squash2End = bounceEnd + squash2Duration;
-        var wobbleEnd = squash2End + wobbleDuration;
+        var wobbleEnd = bounceEnd + wobbleDuration;
         var animationEnd = wobbleEnd + fallDuration;
 
         var tipAngle = baseTilt + wobbleAmplitudeEnd;
-        var tipX = landingX + wobbleAmplitudeEnd * wobbleLean;
+        var tipX = landingX + wobbleAmplitudeEnd * leanShift;
         var startedAt = null;
-
-        function squashScales(progress, entryStretch, squashAmount) {
-            // dip from the incoming stretch into the squash, then recover;
-            // cosine-eased so both ends join their neighbors smoothly
-            var scaleY;
-            if (progress < 0.35) {
-                scaleY = easeCos(1 + entryStretch, 1 - squashAmount, progress / 0.35);
-            } else {
-                scaleY = easeCos(1 - squashAmount, 1, (progress - 0.35) / 0.65);
-            }
-            return { y: scaleY, x: 1 - (scaleY - 1) * 0.8 };
-        }
 
         function renderTomato(x, y, rotation, scaleX, scaleY) {
             tomato.style.opacity = "1";
@@ -114,7 +97,6 @@
             var rotation = baseTilt;
             var scaleX = 1;
             var scaleY = 1;
-            var scales;
 
             if (elapsed >= 0 && elapsed < dropEnd) {
                 y = startY + 0.5 * gravity * elapsed * elapsed;
@@ -123,36 +105,32 @@
                 scaleY = 1 + dropStretch;
                 scaleX = 1 - dropStretch * 0.8;
             } else if (elapsed >= dropEnd && elapsed < squashEnd) {
+                // dip from the incoming stretch into the squash, recover;
+                // cosine-eased so both ends join their neighbors smoothly
+                var squashProgress = (elapsed - dropEnd) / squashDuration;
                 y = landingY;
-                scales = squashScales((elapsed - dropEnd) / squashDuration,
-                    dropStretchMax, 0.2);
-                scaleY = scales.y;
-                scaleX = scales.x;
+                if (squashProgress < 0.35) {
+                    scaleY = easeCos(1 + dropStretchMax, 0.8, squashProgress / 0.35);
+                } else {
+                    scaleY = easeCos(0.8, 1, (squashProgress - 0.35) / 0.65);
+                }
+                scaleX = 1 - (scaleY - 1) * 0.8;
             } else if (elapsed >= squashEnd && elapsed < bounceEnd) {
                 var bounceTime = elapsed - squashEnd;
-                var bounceSpeed = bounceVelocity - gravity * bounceTime;
                 y = landingY - (bounceVelocity * bounceTime - 0.5 * gravity * bounceTime * bounceTime);
-                // stretch follows the speed: zero at the apex, and eased in
-                // over the first moments so it joins the squash recovery
-                var bounceStretch = bounceStretchMax * Math.abs(bounceSpeed) / bounceVelocity;
-                bounceStretch *= Math.min(1, bounceTime / 0.06);
-                scaleY = 1 + bounceStretch;
-                scaleX = 1 - bounceStretch * 0.8;
-            } else if (elapsed >= bounceEnd && elapsed < squash2End) {
-                y = landingY;
-                scales = squashScales((elapsed - bounceEnd) / squash2Duration,
-                    bounceStretchMax, 0.11);
-                scaleY = scales.y;
-                scaleX = scales.x;
-            } else if (elapsed >= squash2End && elapsed < wobbleEnd) {
-                var wobbleProgress = (elapsed - squash2End) / wobbleDuration;
-                // frequency rises with the chirp, amplitude grows toward
-                // the tipping angle; both start at zero, so the wobble
-                // emerges seamlessly from stillness
-                var wobblePhase = wobblePhaseTotal * Math.pow(wobbleProgress, wobbleChirpPower);
-                var wobbleAngle = wobbleAmplitudeEnd * Math.pow(wobbleProgress, 1.5) *
-                    Math.sin(wobblePhase);
-                x = landingX + wobbleAngle * wobbleLean;
+                // the corner's torque leans it over during the hop
+                rotation = easeCos(baseTilt, baseTilt + landingLean,
+                    bounceTime / bounceDuration);
+                x = landingX + (rotation - baseTilt) * leanShift;
+            } else if (elapsed >= bounceEnd && elapsed < wobbleEnd) {
+                var wobbleProgress = (elapsed - bounceEnd) / wobbleDuration;
+                // one slow full cycle of cos: starts at the rightward
+                // landing lean, swings left, and returns right — with the
+                // amplitude growing so the last swing goes past tipping
+                var wobbleAmplitude = landingLean +
+                    (wobbleAmplitudeEnd - landingLean) * wobbleProgress;
+                var wobbleAngle = wobbleAmplitude * Math.cos(2 * Math.PI * wobbleProgress);
+                x = landingX + wobbleAngle * leanShift;
                 y = landingY;
                 rotation = baseTilt + wobbleAngle;
             } else if (elapsed >= wobbleEnd) {
@@ -161,10 +139,8 @@
                 var drift;
                 if (fallTime < pivotDuration) {
                     // constant angular acceleration about the corner
-                    var pivotAccel = fallSpin / pivotDuration;
-                    var driftAccel = fallDrift / pivotDuration;
-                    spin = 0.5 * pivotAccel * fallTime * fallTime;
-                    drift = 0.5 * driftAccel * fallTime * fallTime;
+                    spin = 0.5 * (fallSpin / pivotDuration) * fallTime * fallTime;
+                    drift = 0.5 * (fallDrift / pivotDuration) * fallTime * fallTime;
                 } else {
                     var freeTime = fallTime - pivotDuration;
                     spin = 0.5 * fallSpin * pivotDuration + fallSpin * freeTime;
