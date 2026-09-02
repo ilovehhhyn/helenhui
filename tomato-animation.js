@@ -37,7 +37,7 @@
         var leanShift = 0.3; // px of x shift per degree of lean while rocking
 
         // one gravity for every airborne phase
-        var gravity = 2200;
+        var gravity = 1100;
         var delay = 0.25;
 
         // fall: free fall from rest, y = 1/2 g t^2, stretching with speed
@@ -46,10 +46,11 @@
         var dropStretchMax = 0.06;
         var squashDuration = 0.09;
 
-        // bounce: a small 5px hop. bouncing off a corner puts the contact
+        // bounce: a hop one-quarter of the tomato's rendered height.
+        // Bouncing off a corner puts the contact
         // force off-center, so the hop also torques the tomato — it comes
         // back down already leaning right, straight into the wobble
-        var bounceHeight = 5;
+        var bounceHeight = tomatoHeight * 0.25;
         var bounceVelocity = Math.sqrt(2 * gravity * bounceHeight);
         var bounceDuration = 2 * bounceVelocity / gravity;
         var landingLean = 12; // deg of rightward slant it lands with
