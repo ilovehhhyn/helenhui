@@ -83,6 +83,32 @@
             line-height: 1.6;
         }
 
+        /* ---- landing tomato animation ---- */
+        .tomato-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 62px;
+            height: 68px;
+            z-index: 90;
+            pointer-events: none;
+            opacity: 0;
+            will-change: transform, opacity;
+        }
+
+        .tomato-art {
+            display: block;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+            transform-origin: 50% 50%;
+            will-change: transform;
+        }
+
+        #tomato-tree-target {
+            white-space: nowrap;
+        }
+
         /* ---- scroll-down indicator ---- */
         .scroll-indicator {
             position: absolute;
@@ -228,6 +254,11 @@
             h1 { font-size: 2em; }
             p { font-size: 1.1em; }
 
+            .tomato-animation {
+                width: 53px;
+                height: 58px;
+            }
+
             .scroll-indicator {
                 font-size: 0.85em;
                 width: 90%;
@@ -256,7 +287,19 @@
     <section class="hero">
         <div class="container">
             <h1>welcome to helen's world</h1>
-            <p>helen writes, helen draws, helen builds, helen sits under a tomato tree</p>
+            <p class="tagline">helen writes, helen draws, helen builds, helen sits under a <span id="tomato-tree-target">tomato tree</span></p>
+        </div>
+
+        <div class="tomato-animation" aria-hidden="true">
+            <svg class="tomato-art" viewBox="0 0 420 420" focusable="false">
+                <path fill="#f22f2f" d="M226 177C187 151 144 138 104 145C55 154 28 200 28 267C28 338 79 379 148 391C218 404 298 394 347 359C389 329 401 269 383 211C367 160 329 140 286 149C260 155 242 168 226 177Z"></path>
+                <path fill="#2f7038" d="M224 184L241 71L255 73L239 184Z"></path>
+                <path fill="#2f7038" d="M227 177L111 141L240 190Z"></path>
+                <path fill="#2f7038" d="M229 178L352 142L242 192Z"></path>
+                <path fill="#2f7038" d="M234 183L344 225L227 198Z"></path>
+                <path fill="#2f7038" d="M224 183L173 248L241 188Z"></path>
+                <path fill="#2f7038" d="M216 176L238 173L248 191L228 202L211 190Z"></path>
+            </svg>
         </div>
 
         <a href="#research" class="scroll-indicator" style="text-decoration: none;">
@@ -292,5 +335,6 @@
     </div>
 
     <script src="writings.js"></script>
+    <script src="tomato-animation.js"></script>
 </body>
 </html>
