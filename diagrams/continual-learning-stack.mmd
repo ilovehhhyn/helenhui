@@ -1,0 +1,6 @@
+flowchart TB
+    A["Base open-weight model"] --> B["Training layer:<br/>adapters, RL post-training"]
+    B --> C["Adapter store:<br/>per-user deltas, versioned, recoverable"]
+    C --> D["Serving layer:<br/>multi-adapter batching, hot-swap,<br/>cross-model KV transfer"]
+    D --> E["Evaluation:<br/>environments that measure learning and forgetting"]
+    E -. signal back into training .-> B
