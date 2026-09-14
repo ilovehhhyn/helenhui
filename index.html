@@ -164,6 +164,37 @@
             overflow: hidden;
         }
 
+        .hero .container {
+            max-width: 860px;
+        }
+
+        .hero h1 {
+            font-size: clamp(2em, 4vw, 3.4em);
+            line-height: 1.15;
+            margin-bottom: 28px;
+        }
+
+        .hero-blurb {
+            max-width: 700px;
+            margin: 0 auto;
+            text-align: left;
+            font-size: 1.05em;
+            line-height: 1.55;
+        }
+
+        .hero-blurb p {
+            margin: 0 0 14px;
+        }
+
+        .hero-blurb ul {
+            margin: 0 0 18px;
+            padding-left: 1.2em;
+        }
+
+        .hero-blurb li {
+            margin-bottom: 7px;
+        }
+
         .tomato-animation {
             position: absolute;
             top: 0;
@@ -240,6 +271,10 @@
             align-items: start;
             font-size: 0.92em;
             line-height: 1.55;
+        }
+
+        .research-projects {
+            width: 100%;
         }
 
         .research h2 {
@@ -342,6 +377,10 @@
             h1 { font-size: 2em; }
             p { font-size: 1.1em; }
 
+            .hero-blurb {
+                font-size: 0.98em;
+            }
+
             .tomato-animation {
                 width: 53px;
                 height: 58px;
@@ -389,8 +428,15 @@
 
     <section class="hero">
         <div class="container">
-            <h1>Helen Hui — Princeton Computer Science Student and AI Researcher</h1>
-            <p class="tagline">helen writes, helen thinks, helen builds, helen sits under a <span id="tomato-tree-target">tomato tree</span></p>
+            <h1>helen writes, helen thinks, helen builds, helen sits under a <span id="tomato-tree-target">tomato tree</span></h1>
+            <div class="hero-blurb">
+                <p>hi! i am helen hui. i am a cs undergrad at princeton (class of 28), doing research on...</p>
+                <ul>
+                    <li>distillation on reasoning models @ princeton language and intelligence lab under dr. sanjeev arora</li>
+                    <li>scaling laws of multi agents @ tom griffiths lab</li>
+                </ul>
+                <p>my research interests are in continual learning, hardware-aware model design, scaling and efficient inference.</p>
+            </div>
         </div>
 
         <div class="tomato-animation" aria-hidden="true">
@@ -406,30 +452,22 @@
         </div>
 
         <a href="#research" class="scroll-indicator" style="text-decoration: none;">
-            <div class="scroll-label">scroll down for research</div>
+            <div class="scroll-label">scroll down for research and blogs</div>
             <div class="triangle">&#9660;</div>
         </a>
     </section>
 
     <section class="research" id="research">
         <div class="research-inner">
-            <div class="research-blurb">
-                <p>i am a cs undergrad at princeton (class of 28), doing research on...</p>
-                <ul>
-                    <li>distillation on reasoning models @ princeton language and intelligence lab under dr. sanjeev arora</li>
-                    <li>scaling laws of multi agents @ tom griffiths lab</li>
-                </ul>
-                <p>my research interests are in continual learning, hardware-aware model design, scaling and efficient inference.</p>
-            </div>
             <div class="research-projects">
-                <h2>projects and blogs (click)</h2>
+                <h2>research and blogs</h2>
                 <ul>
                     <li><a href="research-hardware-aware-continual-learning.html">helen's takes on hardware aware continual learning</a> <span aria-label="star">★</span></li>
                     <li><a href="research-kl-divergence.html">blog: the intuition behind KL divergence in post-training</a></li>
                     <li>
-                        <a href="https://github.com/ilovehhhyn/spin-me-around/tree/main" target="_blank" rel="noopener noreferrer">research (for funsies): post training forgetting law</a>
+                        <a href="https://github.com/ilovehhhyn/spin-me-around/tree/main" target="_blank" rel="noopener noreferrer">KL recovery law project repo</a>
                         <ul class="sub-links">
-                            <li><a href="research-forgetting-law-proposal.pdf" target="_blank" rel="noopener noreferrer">full research proposal</a></li>
+                            <li><a href="research-forgetting-law-proposal.pdf" target="_blank" rel="noopener noreferrer">proposal preprint</a></li>
                         </ul>
                     </li>
                     <li><a href="research-memory-benchmark.html">project: memory retrival system benchmark</a></li>
