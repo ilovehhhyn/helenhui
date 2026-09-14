@@ -166,12 +166,19 @@
 
         .hero .container {
             max-width: 860px;
+            transform: translateY(-28px);
+        }
+
+        .hero-kicker {
+            margin: 0 0 14px;
+            font-size: 1em;
         }
 
         .hero h1 {
-            font-size: clamp(2em, 4vw, 3.4em);
+            font-size: clamp(1.15em, 2.45vw, 2.15em);
             line-height: 1.15;
-            margin-bottom: 28px;
+            margin: 0 0 28px;
+            white-space: nowrap;
             transition: opacity 0.55s ease, transform 0.55s ease;
         }
 
@@ -400,6 +407,14 @@
                 font-size: 0.98em;
             }
 
+            .hero .container {
+                transform: translateY(-18px);
+            }
+
+            .hero h1 {
+                font-size: clamp(0.72em, 3.7vw, 1.55em);
+            }
+
             .tomato-animation {
                 width: 53px;
                 height: 58px;
@@ -448,6 +463,7 @@
 
     <section class="hero">
         <div class="container">
+            <p class="hero-kicker"><strong>this is helen hui, cs @ princeton</strong></p>
             <h1 class="hero-title">helen writes, helen thinks, helen builds, helen sits under a <span id="tomato-tree-target">tomato tree</span></h1>
             <div class="hero-blurb">
                 <p>hi! i am helen hui. i am a cs undergrad at princeton (class of 28), doing research on...</p>
