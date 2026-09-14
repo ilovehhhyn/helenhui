@@ -5,10 +5,16 @@
     var tomatoArt = tomato && tomato.querySelector(".tomato-art");
     var target = document.getElementById("tomato-tree-target");
     var hero = document.querySelector(".hero");
+    var heroTitle = document.querySelector(".hero-title");
+    var heroBlurb = document.querySelector(".hero-blurb");
     var hasRun = false;
 
-    if (!tomato || !tomatoArt || !target || !hero) {
+    if (!tomato || !tomatoArt || !target || !hero || !heroTitle || !heroBlurb) {
         return;
+    }
+
+    function showIntro() {
+        hero.classList.add("intro-visible");
     }
 
     function easeCos(from, to, progress) {
@@ -17,6 +23,9 @@
 
     function runTomatoAnimation() {
         if (hasRun || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+                showIntro();
+            }
             return;
         }
 
@@ -209,6 +218,7 @@
             if (elapsed < animationEnd) {
                 animationFrameId = window.requestAnimationFrame(animateFrame);
             } else {
+                showIntro();
                 stopAnimation();
             }
         }
