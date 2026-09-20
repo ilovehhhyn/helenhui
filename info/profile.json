@@ -1,0 +1,145 @@
+{
+  "schema_version": "1.0",
+  "updated_at": "2026-09-19",
+  "url": "https://ilovehhhyn.github.io/helenhui/info/",
+  "api_url": "https://ilovehhhyn.github.io/helenhui/info/profile.json",
+  "source": {
+    "url": "https://ilovehhhyn.github.io/helenhui/",
+    "description": "Self-described public information from Helen Hui’s personal website. Research descriptions reflect the homepage at the time of this update."
+  },
+  "person": {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "@id": "https://ilovehhhyn.github.io/helenhui/#helen-hui",
+    "name": "Helen Hui",
+    "url": "https://ilovehhhyn.github.io/helenhui/",
+    "mainEntityOfPage": "https://ilovehhhyn.github.io/helenhui/info/",
+    "description": "Helen Hui is a Princeton University computer science undergraduate, class of 2028, researching continual learning, hardware-aware model design, scaling, and efficient inference.",
+    "jobTitle": "Computer science undergraduate",
+    "affiliation": {
+      "@type": "CollegeOrUniversity",
+      "name": "Princeton University",
+      "url": "https://www.princeton.edu/"
+    },
+    "knowsAbout": [
+      "Continual learning",
+      "Hardware-aware model design",
+      "Scaling laws",
+      "Efficient inference",
+      "Distillation of reasoning models",
+      "Multi-agent systems"
+    ],
+    "sameAs": [
+      "https://github.com/ilovehhhyn",
+      "https://www.linkedin.com/in/helen-hui-7125b929b/",
+      "https://x.com/helentomato0o"
+    ]
+  },
+  "education": {
+    "institution": "Princeton University",
+    "field": "Computer science",
+    "level": "Undergraduate",
+    "class_year": 2028
+  },
+  "research": [
+    {
+      "topic": "Distillation on reasoning models",
+      "lab": "Princeton Language and Intelligence Lab",
+      "advisor": "Sanjeev Arora",
+      "source_url": "https://ilovehhhyn.github.io/helenhui/"
+    },
+    {
+      "topic": "Scaling laws of multi-agent systems",
+      "lab": "Tom Griffiths lab",
+      "source_url": "https://ilovehhhyn.github.io/helenhui/"
+    }
+  ],
+  "projects": [
+    {
+      "name": "i draw",
+      "url": "https://ilovehhhyn.github.io/helenhui/gallery.html"
+    },
+    {
+      "name": "docs agent: choobi",
+      "url": "https://github.com/ilovehhhyn/choobi"
+    },
+    {
+      "name": "brain dump app: dooni",
+      "url": "https://ilovehhhyn.github.io/dooni/"
+    },
+    {
+      "name": "drinking pet: tiddly",
+      "url": "https://ilovehhhyn.github.io/tiddly/"
+    },
+    {
+      "name": "poetry",
+      "url": "https://ilovehhhyn.github.io/theresNoEnglishWordForXingFu/"
+    },
+    {
+      "name": "gluh gluh gulp",
+      "url": "https://guulp.vercel.app"
+    }
+  ],
+  "research_and_writing": [
+    {
+      "name": "helen's takes on hardware aware continual learning",
+      "url": "https://ilovehhhyn.github.io/helenhui/research-hardware-aware-continual-learning.html"
+    },
+    {
+      "name": "blog: the intuition behind KL divergence in post-training",
+      "url": "https://ilovehhhyn.github.io/helenhui/research-kl-divergence.html"
+    },
+    {
+      "name": "blog: Why LLMs today can never think like humans",
+      "url": "https://ilovehhhyn.github.io/helenhui/blog-why-llms-cannot-think-like-humans.html"
+    },
+    {
+      "name": "KL recovery law project repo",
+      "url": "https://github.com/ilovehhhyn/spin-me-around/tree/main"
+    },
+    {
+      "name": "proposal preprint",
+      "url": "https://ilovehhhyn.github.io/helenhui/research-forgetting-law-proposal.pdf"
+    },
+    {
+      "name": "project: memory retrival system benchmark",
+      "url": "https://ilovehhhyn.github.io/helenhui/research-memory-benchmark.html"
+    },
+    {
+      "name": "project: rl-inspired portfolio optimization",
+      "url": "https://ilovehhhyn.github.io/helenhui/research-portfolio-optimization.html"
+    }
+  ],
+  "essays": [
+    {
+      "name": "Evolution of thought on writing",
+      "url": "https://ilovehhhyn.github.io/helenhui/page1.html"
+    },
+    {
+      "name": "On time",
+      "url": "https://ilovehhhyn.github.io/helenhui/page2.html"
+    },
+    {
+      "name": "On festivities and utility",
+      "url": "https://ilovehhhyn.github.io/helenhui/page3.html"
+    },
+    {
+      "name": "On love at 18 years old",
+      "url": "https://ilovehhhyn.github.io/helenhui/page4.html"
+    },
+    {
+      "name": "On starfish",
+      "url": "https://ilovehhhyn.github.io/helenhui/page5.html"
+    },
+    {
+      "name": "On gratitude",
+      "url": "https://ilovehhhyn.github.io/helenhui/page6.html"
+    }
+  ],
+  "api": {
+    "method": "GET",
+    "authentication": "None",
+    "format": "application/json",
+    "delivery": "Static JSON hosted on GitHub Pages; no server or query parameters required."
+  }
+}

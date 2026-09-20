@@ -1,0 +1,50 @@
+# Helen Hui
+
+> Helen Hui is a Princeton University computer science undergraduate, class of 2028, researching continual learning, hardware-aware model design, scaling, and efficient inference.
+
+Self-described public information. Updated 2026-09-19.
+
+## Profile
+
+- [Homepage](https://ilovehhhyn.github.io/helenhui/)
+- [Profile and API documentation](https://ilovehhhyn.github.io/helenhui/info/)
+- [Structured JSON profile](https://ilovehhhyn.github.io/helenhui/info/profile.json): GET, no authentication, schema version 1.0.
+
+## Research
+
+- Distillation on reasoning models — Princeton Language and Intelligence Lab, under Sanjeev Arora
+- Scaling laws of multi-agent systems — Tom Griffiths lab
+
+## Projects and art
+
+- [i draw](https://ilovehhhyn.github.io/helenhui/gallery.html)
+- [docs agent: choobi](https://github.com/ilovehhhyn/choobi)
+- [brain dump app: dooni](https://ilovehhhyn.github.io/dooni/)
+- [drinking pet: tiddly](https://ilovehhhyn.github.io/tiddly/)
+- [poetry](https://ilovehhhyn.github.io/theresNoEnglishWordForXingFu/)
+- [gluh gluh gulp](https://guulp.vercel.app)
+
+## Research and technical writing
+
+- [helen's takes on hardware aware continual learning](https://ilovehhhyn.github.io/helenhui/research-hardware-aware-continual-learning.html)
+- [blog: the intuition behind KL divergence in post-training](https://ilovehhhyn.github.io/helenhui/research-kl-divergence.html)
+- [blog: Why LLMs today can never think like humans](https://ilovehhhyn.github.io/helenhui/blog-why-llms-cannot-think-like-humans.html)
+- [KL recovery law project repo](https://github.com/ilovehhhyn/spin-me-around/tree/main)
+- [proposal preprint](https://ilovehhhyn.github.io/helenhui/research-forgetting-law-proposal.pdf)
+- [project: memory retrival system benchmark](https://ilovehhhyn.github.io/helenhui/research-memory-benchmark.html)
+- [project: rl-inspired portfolio optimization](https://ilovehhhyn.github.io/helenhui/research-portfolio-optimization.html)
+
+## Essays
+
+- [Evolution of thought on writing](https://ilovehhhyn.github.io/helenhui/page1.html)
+- [On time](https://ilovehhhyn.github.io/helenhui/page2.html)
+- [On festivities and utility](https://ilovehhhyn.github.io/helenhui/page3.html)
+- [On love at 18 years old](https://ilovehhhyn.github.io/helenhui/page4.html)
+- [On starfish](https://ilovehhhyn.github.io/helenhui/page5.html)
+- [On gratitude](https://ilovehhhyn.github.io/helenhui/page6.html)
+
+## Official profiles
+
+- https://github.com/ilovehhhyn
+- https://www.linkedin.com/in/helen-hui-7125b929b/
+- https://x.com/helentomato0o
