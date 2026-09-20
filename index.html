@@ -136,6 +136,34 @@
             color: #000000;
         }
 
+        .projects-note {
+            position: absolute;
+            top: 5px;
+            left: 180px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: max-content;
+            font-size: 0.85em;
+            letter-spacing: 0.05em;
+            line-height: 1.5;
+            cursor: pointer;
+            animation: projects-float 3s ease-in-out infinite;
+        }
+
+        .projects-note .scroll-label { padding: 0; }
+        .projects-note-arrow { font-size: 1.4em; }
+        .nav-toggle:checked ~ .projects-note { visibility: hidden; }
+
+        @keyframes projects-float {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(5px); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .projects-note { animation: none; }
+        }
+
         /* ---- sections ---- */
         section {
             min-height: 100vh;
@@ -169,26 +197,22 @@
         }
 
         .hero .container {
+            width: 100%;
             max-width: 860px;
-            transform: translateY(-28px);
         }
 
-        .hero-kicker {
-            margin: 0 0 14px;
-            font-size: 1em;
-            transition: opacity 0.55s ease, transform 0.55s ease;
-        }
-
-        .hero h1 {
-            width: 100vw;
-            margin-left: 50%;
-            transform: translateX(-50%);
-            font-size: clamp(0.95em, 2vw, 1.8em);
-            line-height: 1.15;
-            margin-top: 0;
-            margin-bottom: 28px;
+        .hero-tagline {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: max-content;
+            max-width: calc(100% - 32px);
             white-space: nowrap;
-            text-align: center;
+            transform: translate(-50%, -50%);
+            font-size: clamp(0.5rem, 2.7vw, 1.8rem);
+            font-weight: normal;
+            line-height: 1.5;
+            margin: 0;
             transition: opacity 0.55s ease, transform 0.55s ease;
         }
 
@@ -215,16 +239,12 @@
             text-align: left;
         }
 
-        .hero.intro-visible h1 {
+        .hero.intro-visible .hero-tagline {
             opacity: 0;
-            transform: translateX(-50%) translateY(-10px);
+            visibility: hidden;
+            transform: translate(-50%, calc(-50% - 10px));
             pointer-events: none;
-        }
-
-        .hero.intro-visible .hero-kicker {
-            opacity: 0;
-            transform: translateY(-10px);
-            pointer-events: none;
+            transition: opacity 0.55s ease, transform 0.55s ease, visibility 0s 0.55s;
         }
 
         .hero.intro-visible .hero-blurb {
@@ -423,13 +443,22 @@
                 font-size: 0.98em;
             }
 
-            .hero .container {
-                transform: translateY(-18px);
-            }
 
-            .hero h1 {
-                font-size: clamp(0.62em, 2.4vw, 1.35em);
+            .top-nav { flex-wrap: wrap; gap: 12px; }
+            .projects-note {
+                top: 44px;
+                left: 0;
+                width: 210px;
+                align-items: flex-start;
+                font-size: 0.75em;
             }
+            .projects-note-arrow { font-size: 0; }
+            .projects-note-arrow::before { content: "↑"; font-size: 20px; }
+            .projects-note .scroll-label::before { inset: -8px -12px; }
+            .social-links { position: absolute; top: 46px; right: 0; gap: 6px; }
+            .social-btn { padding: 0; }
+            .hero { padding-top: 110px; padding-bottom: 180px; }
+            .nav-links { max-height: calc(100dvh - 130px); overflow-y: auto; }
 
             .tomato-animation {
                 width: 53px;
@@ -453,15 +482,17 @@
     <nav class="top-nav">
         <div class="projects-menu">
             <input type="checkbox" id="nav-toggle" class="nav-toggle">
-            <label for="nav-toggle" class="nav-summary">projects &#9662;</label>
+            <label for="nav-toggle" class="nav-summary">personal projects &#9662;</label>
+            <label for="nav-toggle" class="projects-note"><span class="projects-note-arrow" aria-hidden="true">←</span> <span class="scroll-label">i love making products &amp; tools in my free time!</span></label>
             <div class="nav-links">
-                <a href="info/" class="nav-btn">about helen / API</a>
+                <a href="https://ilovehhhyn.github.io/dooni/" target="_blank" rel="noopener noreferrer" class="nav-btn">dooni <span aria-label="star">★</span></a>
+                <a href="https://ilovehhhyn.github.io/choobi/#" target="_blank" rel="noopener noreferrer" class="nav-btn">choobi <span aria-label="star">★</span></a>
+                <a href="https://ilovehhhyn.github.io/tiddly/" target="_blank" rel="noopener noreferrer" class="nav-btn">tiddly <span aria-label="star">★</span></a>
+                <a href="princetoncourses-ai.html" class="nav-btn">Case: PrincetonCourses AI</a>
+                <a href="https://ilovehhhyn.github.io/theresNoEnglishWordForXingFu/" target="_blank" rel="noopener noreferrer" class="nav-btn">poetry</a>
+                <a href="https://guulp.vercel.app" target="_blank" rel="noopener noreferrer" class="nav-btn">water catalogue</a>
                 <a href="gallery.html" class="nav-btn">i draw</a>
-                <a href="https://github.com/ilovehhhyn/choobi" target="_blank" class="nav-btn">docs agent: choobi</a>
-                <a href="https://ilovehhhyn.github.io/dooni/" target="_blank" class="nav-btn">brain dump app: dooni</a>
-                <a href="https://ilovehhhyn.github.io/tiddly/" target="_blank" class="nav-btn">drinking pet: tiddly</a>
-                <a href="https://ilovehhhyn.github.io/theresNoEnglishWordForXingFu/" target="_blank" class="nav-btn">poetry</a>
-                <a href="https://guulp.vercel.app" target="_blank" class="nav-btn">gluh gluh gulp</a>
+                <a href="info/" class="nav-btn">api</a>
             </div>
         </div>
         <div class="social-links">
@@ -479,16 +510,14 @@
 
     <section class="hero">
         <div class="container">
-            <p class="hero-kicker"><strong>this is helen hui, cs @ princeton</strong></p>
-            <h1 class="hero-title">Helen Hui — Princeton Computer Science</h1>
-            <p class="hero-tagline">helen writes, helen thinks, helen builds, helen sits under a <span id="tomato-tree-target">tomato tree</span></p>
+            <h1 class="hero-tagline">helen writes, helen thinks, helen builds, helen sits under a <span id="tomato-tree-target">tomato tree</span></h1>
             <div class="hero-blurb">
                 <p>hi! i am helen hui. i am a cs undergrad at princeton (class of 28), doing research on...</p>
                 <ul>
                     <li>distillation on reasoning models @ princeton language and intelligence lab under dr. sanjeev arora</li>
                     <li>scaling laws of multi agents @ tom griffiths lab</li>
                 </ul>
-                <p>my research interests are in continual learning, hardware-aware model design, scaling and efficient inference.</p>
+                <p>my research interests are in continual learning, generalizability, hardware-aware model design for scaling and efficient inference.</p>
             </div>
         </div>
 
@@ -541,6 +570,6 @@
     </div>
 
     <script src="writings.js"></script>
-    <script src="tomato-animation.js?v=5"></script>
+    <script src="tomato-animation.js?v=6"></script>
 </body>
 </html>

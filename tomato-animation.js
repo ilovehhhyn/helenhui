@@ -5,11 +5,10 @@
     var tomatoArt = tomato && tomato.querySelector(".tomato-art");
     var target = document.getElementById("tomato-tree-target");
     var hero = document.querySelector(".hero");
-    var heroTitle = document.querySelector(".hero-title");
     var heroBlurb = document.querySelector(".hero-blurb");
     var hasRun = false;
 
-    if (!tomato || !tomatoArt || !target || !hero || !heroTitle || !heroBlurb) {
+    if (!tomato || !tomatoArt || !target || !hero || !heroBlurb) {
         return;
     }
 
@@ -133,6 +132,7 @@
 
         function stopWhenLandingLeavesView() {
             if (target.getBoundingClientRect().bottom <= 0) {
+                showIntro();
                 stopAnimation();
             }
         }

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case: PrincetonCourses AI — Helen Hui</title>
+    <meta name="description" content="An AI course assistant for PrincetonCourses, with schedule-aware course recommendations. A project by Helen Hui.">
+    <link rel="canonical" href="https://ilovehhhyn.github.io/helenhui/princetoncourses-ai.html">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #fff; color: #000; font-family: Arial, sans-serif; }
+        main { max-width: 1040px; margin: 0 auto; padding: 32px 24px 64px; }
+        a { color: inherit; text-underline-offset: 4px; }
+        .back { display: inline-block; border: 1px solid; border-radius: 20px; padding: 8px 14px; font-size: .85rem; text-decoration: none; }
+        a:focus-visible { outline: 2px solid #000; outline-offset: 5px; }
+        h1 { margin: 64px 0 24px; font-size: clamp(2rem, 5vw, 3rem); letter-spacing: -.035em; }
+        p { max-width: 760px; font-size: 1.1rem; line-height: 1.7; }
+        figure { margin: 36px 0 0; }
+        video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; }
+        figcaption { margin-top: 12px; color: #555; font-size: .9rem; line-height: 1.6; }
+        @media (max-width: 600px) { main { padding: 24px 18px 48px; } h1 { margin-top: 44px; } }
+    </style>
+</head>
+<body>
+    <main>
+        <nav aria-label="Case navigation"><a class="back" href="index.html">← home</a></nav>
+        <h1>Case: PrincetonCourses AI</h1>
+        <p>i built an AI course assistant for PrincetonCourses to help students find classes that fit their interests and schedules. students can ask questions in natural language and explore recommendations alongside the course catalogue. the demo shows the assistant using a student's schedule and preferences to suggest courses that fit their free time.</p>
+        <figure>
+            <video controls playsinline preload="metadata" poster="videos/princetoncourses-ai-poster.jpg" aria-label="PrincetonCourses AI course assistant demo">
+                <source src="videos/princetoncourses-ai-demo.mp4" type="video/mp4">
+                Your browser does not support embedded video. <a href="videos/princetoncourses-ai-demo.mp4">Watch the demo</a>.
+            </video>
+            <figcaption>a quick demo: asking for a course recommendation based on a student's schedule.</figcaption>
+        </figure>
+    </main>
+</body>
+</html>
