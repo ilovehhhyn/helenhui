@@ -108,3 +108,15 @@ body {
         gap: 14px;
     }
 }
+
+.author-byline {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 12px 0 24px;
+    color: #555;
+}
+
+.author-byline a {
+    color: inherit;
+    text-underline-offset: 3px;
+}
