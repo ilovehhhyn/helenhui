@@ -136,10 +136,9 @@
             color: #000000;
         }
 
-        .projects-note {
+        .projects-note,
+        .writings-note {
             position: absolute;
-            top: 5px;
-            left: 180px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -147,12 +146,18 @@
             font-size: 0.85em;
             letter-spacing: 0.05em;
             line-height: 1.5;
-            cursor: pointer;
             animation: projects-float 3s ease-in-out infinite;
         }
 
-        .projects-note .scroll-label { padding: 0; }
-        .projects-note-arrow { font-size: 1.4em; }
+        .projects-note {
+            top: 5px;
+            left: 180px;
+            cursor: pointer;
+        }
+
+        .projects-note .scroll-label,
+        .writings-note .scroll-label { padding: 0; }
+        .note-arrow { font-size: 1.4em; }
         .nav-toggle:checked ~ .projects-note { visibility: hidden; }
 
         @keyframes projects-float {
@@ -161,7 +166,7 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
-            .projects-note { animation: none; }
+            .projects-note, .writings-note { animation: none; }
         }
 
         /* ---- sections ---- */
@@ -400,11 +405,31 @@
             bottom: 20px;
             left: 0;
             right: 0;
+            width: max-content;
+            margin-inline: auto;
             display: flex;
             gap: 20px;
             justify-content: center;
             align-items: center;
             z-index: 100;
+        }
+
+        .writings-note {
+            left: calc(100% + 12px);
+            pointer-events: none;
+        }
+
+        .writings-note[hidden] { display: none; }
+
+        @media (max-width: 480px) {
+            .writings-note {
+                left: auto;
+                bottom: calc(100% + 6px);
+                flex-direction: column-reverse;
+                gap: 0;
+                font-size: 0.75em;
+            }
+            .writings-note .note-arrow { transform: rotate(-90deg); }
         }
 
         .dot {
@@ -452,8 +477,8 @@
                 align-items: flex-start;
                 font-size: 0.75em;
             }
-            .projects-note-arrow { font-size: 0; }
-            .projects-note-arrow::before { content: "↑"; font-size: 20px; }
+            .projects-note .note-arrow { font-size: 0; }
+            .projects-note .note-arrow::before { content: "↑"; font-size: 20px; }
             .projects-note .scroll-label::before { inset: -8px -12px; }
             .social-links { position: absolute; top: 46px; right: 0; gap: 6px; }
             .social-btn { padding: 0; }
@@ -483,7 +508,7 @@
         <div class="projects-menu">
             <input type="checkbox" id="nav-toggle" class="nav-toggle">
             <label for="nav-toggle" class="nav-summary">personal projects &#9662;</label>
-            <label for="nav-toggle" class="projects-note"><span class="projects-note-arrow" aria-hidden="true">←</span> <span class="scroll-label">i love making products &amp; tools in my free time!</span></label>
+            <label for="nav-toggle" class="projects-note"><span class="note-arrow" aria-hidden="true">←</span> <span class="scroll-label">i love making products &amp; tools in my free time!</span></label>
             <div class="nav-links">
                 <a href="https://ilovehhhyn.github.io/find-aircraft/" target="_blank" rel="noopener noreferrer" class="nav-btn">find plane tip</a>
                 <a href="https://ilovehhhyn.github.io/bite-website/" target="_blank" rel="noopener noreferrer" class="nav-btn">training api <span aria-label="star">★</span></a>
@@ -517,8 +542,7 @@
             <div class="hero-blurb">
                 <p>hi! i am helen hui. i am a cs undergrad at princeton (class of 28), doing research on...</p>
                 <ul>
-                    <li>agents &amp; test-time training @ princeton language and intelligence lab under dr. sanjeev arora</li>
-                    <li>scaling laws of multi agents @ tom griffiths lab</li>
+                    <li>agent swarm safety, computer use agents, &amp; test-time training @ princeton language and intelligence lab under dr. sanjeev arora</li>
                 </ul>
                 <p>my research interests are in alignment, generalizability, agent swarms.</p>
             </div>
@@ -547,14 +571,14 @@
             <div class="research-projects">
                 <h2>research and blogs</h2>
                 <ul>
-                    <li><a href="blog-training-api.html">i made a fast and cute training api!</a></li>
-                    <li><a href="research-hardware-aware-continual-learning.html">helen's takes on hardware aware continual learning</a> <span aria-label="star">★</span></li>
+                    <li><a href="blog-training-api.html">announcement: i made a fast and cute training api!</a></li>
+                    <li><a href="research-hardware-aware-continual-learning.html">blog: helen's takes on hardware aware continual learning</a></li>
                     <li><a href="research-kl-divergence.html">blog: the intuition behind KL divergence in post-training</a></li>
                     <li><a href="blog-why-llms-cannot-think-like-humans.html">blog: Why LLMs today can never think like humans</a></li>
                     <li>
-                        <a href="https://github.com/ilovehhhyn/spin-me-around/tree/main" target="_blank" rel="noopener noreferrer">KL recovery law project repo</a>
+                        <a href="https://github.com/ilovehhhyn/spin-me-around/tree/main" target="_blank" rel="noopener noreferrer">project: can KL divergence predict recoverability of lost information</a>
                         <ul class="sub-links">
-                            <li><a href="research-forgetting-law-proposal.pdf" target="_blank" rel="noopener noreferrer">proposal preprint</a></li>
+                            <li><a href="research-forgetting-law-proposal.pdf" target="_blank" rel="noopener noreferrer">proposal</a></li>
                         </ul>
                     </li>
                     <li><a href="research-memory-benchmark.html">project: memory retrival system benchmark</a></li>
@@ -571,8 +595,19 @@
         <a href="page4.html" class="dot"></a>
         <a href="page5.html" class="dot"></a>
         <a href="page6.html" class="dot"></a>
+        <span class="writings-note" hidden>
+            <span class="note-arrow" aria-hidden="true">←</span>
+            <span class="scroll-label">other writings</span>
+        </span>
     </div>
 
+    <script>
+        const writingsNote = document.querySelector('.writings-note');
+        const blogsObserver = new IntersectionObserver(([entry]) => {
+            writingsNote.hidden = !entry.isIntersecting;
+        });
+        blogsObserver.observe(document.querySelector('.research-projects'));
+    </script>
     <script src="writings.js"></script>
     <script src="tomato-animation.js?v=6"></script>
 </body>
