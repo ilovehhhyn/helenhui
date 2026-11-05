@@ -26,6 +26,7 @@ Self-described public information. Updated 2026-09-19.
 
 ## Research and technical writing
 
+- [blog: bets for 2027](https://ilovehhhyn.github.io/helenhui/blog-bets-for-2027.html)
 - [helen's takes on hardware aware continual learning](https://ilovehhhyn.github.io/helenhui/research-hardware-aware-continual-learning.html)
 - [blog: the intuition behind KL divergence in post-training](https://ilovehhhyn.github.io/helenhui/research-kl-divergence.html)
 - [blog: LLMs today can never think like humans (and it's not a bad thing)](https://ilovehhhyn.github.io/helenhui/blog-why-llms-cannot-think-like-humans.html)
