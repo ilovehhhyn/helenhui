@@ -28,7 +28,7 @@ Self-described public information. Updated 2026-09-19.
 
 - [helen's takes on hardware aware continual learning](https://ilovehhhyn.github.io/helenhui/research-hardware-aware-continual-learning.html)
 - [blog: the intuition behind KL divergence in post-training](https://ilovehhhyn.github.io/helenhui/research-kl-divergence.html)
-- [blog: Why LLMs today can never think like humans](https://ilovehhhyn.github.io/helenhui/blog-why-llms-cannot-think-like-humans.html)
+- [blog: LLMs today can never think like humans (and it's not a bad thing)](https://ilovehhhyn.github.io/helenhui/blog-why-llms-cannot-think-like-humans.html)
 - [KL recovery law project repo](https://github.com/ilovehhhyn/spin-me-around/tree/main)
 - [proposal preprint](https://ilovehhhyn.github.io/helenhui/research-forgetting-law-proposal.pdf)
 - [project: memory retrival system benchmark](https://ilovehhhyn.github.io/helenhui/research-memory-benchmark.html)
