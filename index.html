@@ -205,7 +205,7 @@
 
         .hero .container {
             width: 100%;
-            max-width: 860px;
+            max-width: 1120px;
         }
 
         .hero-tagline {
@@ -224,10 +224,15 @@
         }
 
         .hero-blurb {
-            max-width: 700px;
+            display: grid;
+            grid-template-columns: clamp(144px, 16vw, 204px) minmax(0, 1fr);
+            align-items: center;
+            gap: clamp(24px, 3vw, 44px);
+            width: fit-content;
+            max-width: 100%;
             margin: 0 auto;
-            text-align: center;
-            font-size: 0.92em;
+            text-align: left;
+            font-size: 1rem;
             line-height: 1.55;
             opacity: 0;
             transform: translateY(10px);
@@ -235,15 +240,24 @@
             transition: opacity 0.7s ease 0.1s, transform 0.7s ease 0.1s;
         }
 
+        .hero-portrait {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
         .hero-blurb p {
+            font-size: inherit;
             margin: 0 0 14px;
         }
 
+        .hero-blurb p:last-child {
+            margin-bottom: 0;
+        }
+
         .hero-blurb ul {
-            display: inline-block;
-            margin: 0 0 18px;
+            margin: 0 0 14px;
             padding-left: 1.2em;
-            text-align: left;
         }
 
         .hero.intro-visible .hero-tagline {
@@ -451,6 +465,17 @@
         }
 
         /* ---- mobile ---- */
+        @media (max-width: 940px) {
+            .hero-blurb {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 22px;
+            }
+
+            .hero-portrait {
+                width: clamp(120px, 20vw, 160px);
+            }
+        }
+
         @media (max-width: 768px) {
             .top-nav {
                 left: 16px;
@@ -542,12 +567,15 @@
         <div class="container">
             <h1 class="hero-tagline">helen writes, helen thinks, helen builds, helen sits under a <span id="tomato-tree-target">tomato tree</span></h1>
             <div class="hero-blurb">
-                <p>hi! i am helen hui. i am a cs undergrad at princeton university (class of 28), doing research on...</p>
-                <ul>
-                    <li>agent swarms, vlm &amp; alignment @ princeton language and intelligence lab with <a href="https://aroraresearch-princeton.github.io/">prof. sanjeev arora</a></li>
-                    <li>theory &amp; alignment @ <a href="https://sites.google.com/view/gbrainprinceton/home?pli=1&amp;authuser=0">google deepmind princeton</a> with prof. elad hazan</li>
-                </ul>
-                <p>my research interests are in alignment, generalizability, agent swarms.</p>
+                <img class="hero-portrait" src="images/helen-hui-portrait.jpg" width="640" height="640" alt="Helen Hui holding a pink question mark">
+                <div>
+                    <p>hi! i am helen hui. i am a cs undergrad at princeton university (class of 28), doing research on...</p>
+                    <ul>
+                        <li>agent swarms, vlm &amp; alignment @ <a href="https://aroraresearch-princeton.github.io/">princeton language and intelligence lab</a> with prof. sanjeev arora</li>
+                        <li>theory &amp; alignment @ <a href="https://sites.google.com/view/gbrainprinceton/home?pli=1&amp;authuser=0">google deepmind princeton</a> with prof. elad hazan</li>
+                    </ul>
+                    <p>my research interests are in alignment, generalizability, agent swarms.</p>
+                </div>
             </div>
         </div>
 
