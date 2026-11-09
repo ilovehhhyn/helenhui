@@ -116,7 +116,7 @@ body {
     color: #555;
 }
 
-.author-byline a {
-    color: inherit;
+a {
+    color: #000;
     text-underline-offset: 3px;
 }

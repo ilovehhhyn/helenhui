@@ -52,6 +52,7 @@
         // one gravity for every airborne phase
         var gravity = 1100;
         var delay = 0.25;
+        var playbackRate = 1.5;
 
         // fall: free fall from rest, y = 1/2 g t^2, stretching with speed
         var dropHeight = landingY - startY;
@@ -163,7 +164,7 @@
                 startedAt = timestamp;
             }
 
-            var elapsed = (timestamp - startedAt) / 1000 - delay;
+            var elapsed = (timestamp - startedAt) / 1000 * playbackRate - delay;
             var x = landingX;
             var y = startY;
             var rotation = baseTilt;

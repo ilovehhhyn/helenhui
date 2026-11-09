@@ -34,8 +34,7 @@ page = f'''<!doctype html>
 body {{ margin: 0; }}
 main {{ max-width: 850px; margin: auto; padding: 36px 24px 70px; }}
 nav {{ display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 64px; }}
-a {{ color: inherit; text-underline-offset: 4px; }}
-a:hover {{ color: #b52b20; }}
+a {{ color: #000; text-underline-offset: 4px; }}
 a:focus-visible {{ outline: 3px solid #b52b20; outline-offset: 5px; }}
 .kicker {{ color: #a52b22; font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; }}
 h1 {{ font-size: clamp(2.8rem, 9vw, 4.6rem); letter-spacing: -.055em; margin: 12px 0; }}
