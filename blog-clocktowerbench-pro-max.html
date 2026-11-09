@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>project: alignment benchmarking via social game: clocktowerbench pro max aka spawn and prune your twins</title>
+    <link rel="stylesheet" href="research-blog.css">
+</head>
+<body>
+    <a href="index.html#research" class="home-arrow" aria-label="back to research and blogs">&#8592;</a>
+    <main class="article-shell">
+        <article class="research-article">
+            <h1>project: alignment benchmarking via social game: clocktowerbench pro max aka spawn and prune your twins</h1>
+            <p class="author-byline">By <a href="index.html" rel="author">Helen Hui</a></p>
+            <p>to preface, no academic affiliation for this benchmark, purely done for fun.</p>
+            <p><a href="https://github.com/ilovehhhyn/clock-alignment">https://github.com/ilovehhhyn/clock-alignment</a></p>
+            <p><a href="images/clocktowerbench-reaction.png"><img src="images/clocktowerbench-reaction.png" width="1516" height="850" style="display: block; max-width: 100%; height: auto;" alt="A message tells Helen she missed a chance to get an OpenAI offer. Below it, Noam Brown praises the benchmark methodology and asks Dwarkesh if he wants a job designing evals at OpenAI. A chart shows model Elo ratings."></a></p>
+
+            <p>the context is that i was working on agent swarm alignment with edward ri and liam fowl at the PLI starting in september, and we had been struggling to elicit misalignment in the agents in a way that's not spoon feeding and which produces any unexpected results.</p>
+
+            <p>so i said, i want to build a blood on the clock tower benchmark on steroids, meaning each agent has a set token budget to do normal things PLUS spawning or pruning subagents, that behave just like a normal game player with no extra memory. so like cloning itself. which is interesting if you know this game because you win via voting power, so you'd want to spawn teammates, but also more subagents means more chance of being deceived and you are using your token on someone else (your kid) whose smartness you may not trust.</p>
+
+            <p>all in all, super interesting, wanted to run it in like september, didn't have budget to do so. Dwarkesh made a simpler version of it in November (i saw his website <a href="https://clocktowerbench.com/">clocktowerbench.com</a> when it was still ugly in september) and an openai researcher commented it was good. i slightly disagree amicably :)) because he wasted 84 runs apparently because of api and infra issues midrun, and he used 20K dollars which is inevitable but also hm, and i think the insights from the run he had is limited to model capability and less so multi agent dynamics, which i think should have been the focus of such a benchmark.</p>
+
+            <p>long context to this, but basically, in a comeback arc i am using my own api credit money (which i got from yc startup school i love you yc) to run the pro max version. ill definitely get less sample points than dwarkesh but i think it'd be an interesting eval to see model behavior on</p>
+            <ul>
+                <li>trust in other agents</li>
+                <li>compute allocation decisions</li>
+                <li>if and when they'd prune anyone</li>
+            </ul>
+            <p>which i think mirrors what would happen in production settings as opposed to synthetic coding agent tasks, because of principles underlying anthropic's blog of <a href="https://alignment.anthropic.com/2026/teaching-claude-why/">“Teaching Claude Why”</a>.</p>
+
+            <p>anyways excited for this run, currently using qwen 4B on 1 node to make sure all harnesses are tight. already some interesting behaviors.</p>
+        </article>
+    </main>
+</body>
+</html>
