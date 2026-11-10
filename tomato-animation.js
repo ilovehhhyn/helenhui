@@ -5,15 +5,10 @@
     var tomatoArt = tomato && tomato.querySelector(".tomato-art");
     var target = document.getElementById("tomato-tree-target");
     var hero = document.querySelector(".hero");
-    var heroBlurb = document.querySelector(".hero-blurb");
     var hasRun = false;
 
-    if (!tomato || !tomatoArt || !target || !hero || !heroBlurb) {
+    if (!tomato || !tomatoArt || !target || !hero) {
         return;
-    }
-
-    function showIntro() {
-        hero.classList.add("intro-visible");
     }
 
     function easeCos(from, to, progress) {
@@ -22,9 +17,6 @@
 
     function runTomatoAnimation() {
         if (hasRun || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-            if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-                showIntro();
-            }
             return;
         }
 
@@ -52,7 +44,6 @@
         // one gravity for every airborne phase
         var gravity = 1100;
         var delay = 0.25;
-        var playbackRate = 1.5;
 
         // fall: free fall from rest, y = 1/2 g t^2, stretching with speed
         var dropHeight = landingY - startY;
@@ -133,7 +124,6 @@
 
         function stopWhenLandingLeavesView() {
             if (target.getBoundingClientRect().bottom <= 0) {
-                showIntro();
                 stopAnimation();
             }
         }
@@ -164,7 +154,7 @@
                 startedAt = timestamp;
             }
 
-            var elapsed = (timestamp - startedAt) / 1000 * playbackRate - delay;
+            var elapsed = (timestamp - startedAt) / 1000 - delay;
             var x = landingX;
             var y = startY;
             var rotation = baseTilt;
@@ -219,7 +209,6 @@
             if (elapsed < animationEnd) {
                 animationFrameId = window.requestAnimationFrame(animateFrame);
             } else {
-                showIntro();
                 stopAnimation();
             }
         }

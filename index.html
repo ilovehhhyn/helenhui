@@ -168,6 +168,7 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
             .projects-note, .writings-note { animation: none; }
         }
 
@@ -203,9 +204,8 @@
             overflow: hidden;
         }
 
-        .hero .container {
-            width: 100%;
-            max-width: 1120px;
+        #bio {
+            padding-block: 110px 180px;
         }
 
         .hero-tagline {
@@ -220,10 +220,9 @@
             font-weight: normal;
             line-height: 1.5;
             margin: 0;
-            transition: opacity 0.55s ease, transform 0.55s ease;
         }
 
-        .hero-blurb {
+        .bio-content {
             display: grid;
             grid-template-columns: clamp(144px, 16vw, 204px) minmax(0, 1fr);
             align-items: center;
@@ -234,47 +233,29 @@
             text-align: left;
             font-size: 1rem;
             line-height: 1.55;
-            opacity: 0;
-            transform: translateY(10px);
-            pointer-events: none;
-            transition: opacity 0.7s ease 0.1s, transform 0.7s ease 0.1s;
         }
 
-        .hero-portrait {
+        .bio-portrait {
             display: block;
             width: 100%;
             height: auto;
         }
 
-        .hero-blurb p {
+        .bio-content p {
             font-size: inherit;
             margin: 0 0 14px;
         }
 
-        .hero-blurb p:last-child {
+        .bio-content p:last-child {
             margin-bottom: 0;
         }
 
-        .hero-blurb ul {
+        .bio-content ul {
             margin: 0 0 14px;
             padding-left: 1.2em;
         }
 
-        .hero.intro-visible .hero-tagline {
-            opacity: 0;
-            visibility: hidden;
-            transform: translate(-50%, calc(-50% - 10px));
-            pointer-events: none;
-            transition: opacity 0.55s ease, transform 0.55s ease, visibility 0s 0.55s;
-        }
-
-        .hero.intro-visible .hero-blurb {
-            opacity: 1;
-            transform: translateY(0);
-            pointer-events: auto;
-        }
-
-        .hero-blurb li {
+        .bio-content li {
             margin-bottom: 7px;
         }
 
@@ -305,6 +286,7 @@
 
         /* ---- scroll-down indicator ---- */
         .scroll-indicator {
+            text-decoration: none;
             position: absolute;
             bottom: 90px;
             left: 50%;
@@ -466,12 +448,12 @@
 
         /* ---- mobile ---- */
         @media (max-width: 940px) {
-            .hero-blurb {
+            .bio-content {
                 grid-template-columns: minmax(0, 1fr);
                 gap: 22px;
             }
 
-            .hero-portrait {
+            .bio-portrait {
                 width: clamp(120px, 20vw, 160px);
             }
         }
@@ -491,7 +473,7 @@
             h1 { font-size: 2em; }
             p { font-size: 1.1em; }
 
-            .hero-blurb {
+            .bio-content {
                 font-size: 0.98em;
             }
 
@@ -519,7 +501,8 @@
 
             .scroll-indicator {
                 font-size: 0.85em;
-                width: 90%;
+                width: max-content;
+                max-width: calc(100% - 56px);
             }
 
             .research-inner {
@@ -564,20 +547,7 @@
     </nav>
 
     <section class="hero">
-        <div class="container">
-            <h1 class="hero-tagline">helen writes, helen thinks, helen builds, helen sits under a <span id="tomato-tree-target">tomato tree</span></h1>
-            <div class="hero-blurb">
-                <img class="hero-portrait" src="images/helen-hui-portrait.jpg" width="640" height="640" alt="Helen Hui holding a pink question mark">
-                <div>
-                    <p>hi! i am helen hui. i am a cs undergrad at princeton university (class of 28), doing research on...</p>
-                    <ul>
-                        <li>agent swarms, vlm &amp; alignment @ <a href="https://aroraresearch-princeton.github.io/">princeton language and intelligence lab</a> with prof. sanjeev arora</li>
-                        <li>theory &amp; alignment @ <a href="https://sites.google.com/view/gbrainprinceton/home?pli=1&amp;authuser=0">google deepmind princeton</a> with prof. elad hazan</li>
-                    </ul>
-                    <p>my research interests are in alignment, generalizability, agent swarms.</p>
-                </div>
-            </div>
-        </div>
+        <h1 class="hero-tagline">helen writes, helen thinks, helen builds, helen sits under a <span id="tomato-tree-target">tomato tree</span></h1>
 
         <div class="tomato-animation" aria-hidden="true">
             <svg class="tomato-art" viewBox="0 0 420 420" focusable="false">
@@ -591,9 +561,27 @@
             </svg>
         </div>
 
-        <a href="#research" class="scroll-indicator" style="text-decoration: none;">
-            <div class="scroll-label">scroll down for research and blogs</div>
-            <div class="triangle">&#9660;</div>
+        <a href="#bio" class="scroll-indicator">
+            <div class="scroll-label">scroll down for bio</div>
+            <div class="triangle" aria-hidden="true">&#9660;</div>
+        </a>
+    </section>
+
+    <section id="bio" aria-label="bio">
+        <div class="bio-content">
+            <img class="bio-portrait" src="images/helen-hui-portrait.jpg" width="640" height="640" alt="Helen Hui holding a pink question mark">
+            <div>
+                <p>hi! i am helen hui. i am a cs undergrad at princeton university (class of 28), doing research on...</p>
+                <ul>
+                    <li>agent swarms, vlm &amp; alignment @ <a href="https://aroraresearch-princeton.github.io/">princeton language and intelligence lab</a> with prof. sanjeev arora</li>
+                    <li>theory &amp; alignment @ <a href="https://sites.google.com/view/gbrainprinceton/home?pli=1&amp;authuser=0">google deepmind princeton</a> with prof. elad hazan</li>
+                </ul>
+                <p>my research interests are in alignment, generalizability, agent swarms.</p>
+            </div>
+        </div>
+        <a href="#research" class="scroll-indicator">
+            <div class="scroll-label">scrolled down for blogs and research</div>
+            <div class="triangle" aria-hidden="true">&#9660;</div>
         </a>
     </section>
 
@@ -642,6 +630,6 @@
         blogsObserver.observe(document.querySelector('.research-projects'));
     </script>
     <script src="writings.js"></script>
-    <script src="tomato-animation.js?v=7"></script>
+    <script src="tomato-animation.js?v=8"></script>
 </body>
 </html>
