@@ -16,7 +16,7 @@
     }
 
     function runTomatoAnimation() {
-        if (hasRun || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        if (hasRun || window.scrollY !== 0 || window.location.hash || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
             return;
         }
 
@@ -109,6 +109,8 @@
         var startedAt = null;
         var animationFrameId = null;
         var stopped = false;
+        var fadeOut;
+        var bio = document.getElementById("bio");
 
         function stopAnimation() {
             if (stopped) {
@@ -119,11 +121,15 @@
             if (animationFrameId !== null) {
                 window.cancelAnimationFrame(animationFrameId);
             }
-            window.removeEventListener("scroll", stopWhenLandingLeavesView);
+            if (fadeOut) {
+                fadeOut.cancel();
+            }
+            window.removeEventListener("scroll", stopAnimation);
+            window.removeEventListener("wheel", onWheel);
         }
 
-        function stopWhenLandingLeavesView() {
-            if (target.getBoundingClientRect().bottom <= 0) {
+        function onWheel(event) {
+            if (event.deltaY !== 0) {
                 stopAnimation();
             }
         }
@@ -209,11 +215,24 @@
             if (elapsed < animationEnd) {
                 animationFrameId = window.requestAnimationFrame(animateFrame);
             } else {
-                stopAnimation();
+                tomato.style.opacity = "0";
+                if (!bio || document.activeElement !== document.body) {
+                    stopAnimation();
+                    return;
+                }
+                fadeOut = hero.animate([{ opacity: 1 }, { opacity: 0 }], {
+                    duration: 300, fill: "forwards"
+                });
+                fadeOut.onfinish = function () {
+                    stopAnimation();
+                    bio.scrollIntoView({ behavior: "instant", block: "start" });
+                    bio.animate([{ opacity: 0 }, { opacity: 1 }], 350);
+                };
             }
         }
 
-        window.addEventListener("scroll", stopWhenLandingLeavesView, { passive: true });
+        window.addEventListener("scroll", stopAnimation, { passive: true });
+        window.addEventListener("wheel", onWheel, { passive: true });
         animationFrameId = window.requestAnimationFrame(animateFrame);
     }
 

@@ -417,7 +417,7 @@
             pointer-events: none;
         }
 
-        .writings-note[hidden] { display: none; }
+        .projects-note[hidden], .writings-note[hidden] { display: none; }
 
         @media (max-width: 480px) {
             .writings-note {
@@ -518,7 +518,7 @@
         <div class="projects-menu">
             <input type="checkbox" id="nav-toggle" class="nav-toggle">
             <label for="nav-toggle" class="nav-summary">personal projects &#9662;</label>
-            <label for="nav-toggle" class="projects-note"><span class="note-arrow" aria-hidden="true">←</span> <span class="scroll-label">i love making products &amp; tools in my free time!</span></label>
+            <label for="nav-toggle" class="projects-note" hidden><span class="note-arrow" aria-hidden="true">←</span> <span class="scroll-label">i love making products &amp; tools in my free time!</span></label>
             <div class="nav-links">
                 <a href="https://ilovehhhyn.github.io/find-aircraft/" target="_blank" rel="noopener noreferrer" class="nav-btn">find plane tip</a>
                 <a href="https://ilovehhhyn.github.io/bite-website/" target="_blank" rel="noopener noreferrer" class="nav-btn">training api <span aria-label="star">★</span></a>
@@ -561,10 +561,6 @@
             </svg>
         </div>
 
-        <a href="#bio" class="scroll-indicator">
-            <div class="scroll-label">scroll down for bio</div>
-            <div class="triangle" aria-hidden="true">&#9660;</div>
-        </a>
     </section>
 
     <section id="bio" aria-label="bio">
@@ -623,6 +619,12 @@
     </div>
 
     <script>
+        const projectsNote = document.querySelector('.projects-note');
+        const bioObserver = new IntersectionObserver(([entry]) => {
+            projectsNote.hidden = !entry.isIntersecting;
+        }, { rootMargin: '-45% 0px -45% 0px' });
+        bioObserver.observe(document.getElementById('bio'));
+
         const writingsNote = document.querySelector('.writings-note');
         const blogsObserver = new IntersectionObserver(([entry]) => {
             writingsNote.hidden = !entry.isIntersecting;
@@ -630,6 +632,6 @@
         blogsObserver.observe(document.querySelector('.research-projects'));
     </script>
     <script src="writings.js"></script>
-    <script src="tomato-animation.js?v=8"></script>
+    <script src="tomato-animation.js?v=9"></script>
 </body>
 </html>
